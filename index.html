@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jungle — Project Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F2EB;
+    --black: #111110;
+    --green: #8BFF57;
+    --green-dim: rgba(139,255,87,0.12);
+    --grey: #7A7972;
+    --grey-light: #E8E5DC;
+    --border: rgba(17,17,16,0.1);
+    --border-strong: rgba(17,17,16,0.22);
+    --red: #FF4D4D;
+    --amber: #F5A623;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--black);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── TOP NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--black);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem;
+    height: 52px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .nav-logo {
+    font-size: 17px; font-weight: 500; letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .nav-logo span { color: var(--green); }
+
+  .nav-right { display: flex; align-items: center; gap: 16px; }
+
+  .live-badge {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px; color: rgba(255,255,255,0.5);
+    letter-spacing: 0.3px;
+  }
+  .live-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  .nav-cta {
+    font-size: 12px; font-weight: 500;
+    color: var(--black);
+    background: var(--green);
+    border: none; border-radius: 20px;
+    padding: 6px 14px; cursor: pointer;
+    letter-spacing: -0.1px;
+    transition: opacity 0.15s;
+  }
+  .nav-cta:hover { opacity: 0.85; }
+
+  /* ── LAYOUT ── */
+  .wrap { max-width: 1280px; margin: 0 auto; padding: 0 2rem; }
+
+  /* ── HEADER BAND ── */
+  .page-header {
+    padding: 2.5rem 0 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.5rem;
+  }
+  .page-header h1 {
+    font-size: 28px; font-weight: 300; letter-spacing: -0.8px;
+    color: var(--black); line-height: 1.1; margin-bottom: 4px;
+  }
+  .page-header h1 strong { font-weight: 500; }
+  .page-sub { font-size: 13px; color: var(--grey); }
+
+  /* ── METRICS ROW ── */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 1.5rem;
+  }
+  .metric {
+    background: var(--black);
+    border-radius: 10px;
+    padding: 18px 20px;
+    position: relative; overflow: hidden;
+  }
+  .metric-label {
+    font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: rgba(255,255,255,0.4);
+    margin-bottom: 8px;
+  }
+  .metric-val {
+    font-size: 26px; font-weight: 300; letter-spacing: -1px;
+    color: #fff; line-height: 1;
+  }
+  .metric-val strong { font-weight: 500; }
+  .metric-sub {
+    font-size: 11px; color: rgba(255,255,255,0.35);
+    margin-top: 6px;
+  }
+  .metric-accent {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 2px; background: var(--green);
+  }
+  .metric-accent.warn { background: var(--amber); }
+  .metric-accent.danger { background: var(--red); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .filter-pill {
+    font-size: 12px; font-weight: 400;
+    padding: 5px 14px; border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: transparent; color: var(--grey);
+    cursor: pointer; transition: all 0.12s;
+    letter-spacing: -0.1px;
+  }
+  .filter-pill:hover { border-color: var(--black); color: var(--black); }
+  .filter-pill.active {
+    background: var(--black); color: var(--green);
+    border-color: var(--black);
+  }
+
+  .search-wrap {
+    margin-left: auto;
+    position: relative;
+  }
+  .search-wrap svg {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    opacity: 0.3; pointer-events: none;
+  }
+  .search {
+    font-family: inherit; font-size: 12px;
+    padding: 6px 12px 6px 32px;
+    border: 1px solid var(--border-strong);
+    border-radius: 20px;
+    background: transparent; color: var(--black);
+    width: 200px; outline: none;
+    transition: border-color 0.12s;
+  }
+  .search:focus { border-color: var(--black); }
+  .search::placeholder { color: var(--grey); }
+
+  .view-toggle { display: flex; gap: 4px; }
+  .vbtn {
+    font-size: 11px; padding: 5px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px; background: transparent;
+    color: var(--grey); cursor: pointer; transition: all 0.12s;
+  }
+  .vbtn.active { background: var(--black); color: #fff; border-color: var(--black); }
+
+  /* ── GRID VIEW ── */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 10px;
+  }
+
+  .proj-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.12s, transform 0.12s;
+    position: relative; overflow: hidden;
+  }
+  .proj-card:hover { border-color: var(--border-strong); transform: translateY(-1px); }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .proj-num { font-size: 10px; color: var(--grey); letter-spacing: 0.3px; }
+  .status-pill {
+    font-size: 10px; font-weight: 500;
+    padding: 3px 9px; border-radius: 20px;
+    letter-spacing: 0.1px;
+  }
+  .s-active   { background: #D8FFB8; color: #2A6000; }
+  .s-review   { background: #FFF3C4; color: #7A5500; }
+  .s-onhold   { background: #FFE0E0; color: #8A0000; }
+  .s-complete { background: var(--grey-light); color: var(--grey); }
+
+  .proj-name {
+    font-size: 15px; font-weight: 500; letter-spacing: -0.3px;
+    color: var(--black); line-height: 1.25; margin-bottom: 3px;
+  }
+  .proj-client {
+    font-size: 12px; color: var(--grey); margin-bottom: 14px;
+  }
+
+  .proj-meta {
+    display: flex; gap: 16px; margin-bottom: 14px;
+  }
+  .meta-item { font-size: 11px; color: var(--grey); }
+  .meta-item strong { display: block; font-size: 13px; font-weight: 500; color: var(--black); }
+
+  .prog-wrap { margin-bottom: 14px; }
+  .prog-label {
+    display: flex; justify-content: space-between;
+    font-size: 10px; color: var(--grey); margin-bottom: 5px;
+    letter-spacing: 0.2px;
+  }
+  .prog-bar {
+    height: 3px; background: var(--grey-light); border-radius: 2px; overflow: hidden;
+  }
+  .prog-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.4s; }
+  .prog-fill.over { background: var(--red); }
+  .prog-fill.warn { background: var(--amber); }
+
+  .card-foot {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-top: 12px; border-top: 1px solid var(--border);
+  }
+  .handler { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--grey); }
+  .avatar {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--green-dim); border: 1px solid rgba(139,255,87,0.3);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; font-weight: 600; color: #2A6000;
+    flex-shrink: 0;
+  }
+  .jobs-badge {
+    font-size: 10px; color: var(--grey);
+    background: var(--grey-light); border-radius: 4px;
+    padding: 2px 7px;
+  }
+
+  /* ── LIST VIEW ── */
+  .project-list { display: flex; flex-direction: column; gap: 0; }
+  .list-header {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 90px 90px;
+    gap: 12px;
+    padding: 8px 16px;
+    font-size: 10px; font-weight: 500;
+    text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--grey);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2px;
+  }
+  .proj-row {
+    display: grid;
+    grid-template-columns: 2fr 1.5fr 1fr 90px 90px;
+    gap: 12px; align-items: center;
+    padding: 12px 16px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer; transition: all 0.12s;
+  }
+  .proj-row:hover { background: #fff; border-color: var(--border); }
+  .row-name { font-size: 13px; font-weight: 500; color: var(--black); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-client { font-size: 12px; color: var(--grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-handler { font-size: 12px; color: var(--grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-budget { font-size: 13px; font-weight: 500; color: var(--black); text-align: right; }
+  .row-status { display: flex; justify-content: flex-end; }
+
+  /* ── EMPTY ── */
+  .empty { text-align: center; padding: 4rem 0; color: var(--grey); font-size: 14px; }
+
+  /* ── API CONFIG NOTICE ── */
+  .api-config {
+    margin-top: 2rem;
+    padding: 1rem 1.25rem;
+    background: var(--black);
+    border-radius: 10px;
+    display: flex; align-items: flex-start; gap: 12px;
+  }
+  .api-icon {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--green-dim); border: 1px solid rgba(139,255,87,0.3);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; margin-top: 1px;
+    font-size: 10px; color: var(--green);
+  }
+  .api-text { font-size: 11px; color: rgba(255,255,255,0.4); line-height: 1.6; }
+  .api-text code {
+    font-family: 'Courier New', monospace;
+    color: var(--green); font-size: 10px;
+    background: rgba(139,255,87,0.08);
+    padding: 1px 5px; border-radius: 3px;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    margin-top: 3rem; padding: 1.5rem 0;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-logo { font-size: 13px; font-weight: 500; letter-spacing: -0.3px; color: var(--black); }
+  .footer-logo span { color: var(--green); }
+  .footer-note { font-size: 11px; color: var(--grey); }
+
+  @media (max-width: 720px) {
+    .metrics { grid-template-columns: repeat(2, 1fr); }
+    .project-grid { grid-template-columns: 1fr; }
+    .list-header, .proj-row { grid-template-columns: 1fr auto; }
+    .list-header .lh-handler, .list-header .lh-budget,
+    .proj-row .row-handler, .proj-row .row-budget { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">jungle<span>.</span>projects</div>
+  <div class="nav-right">
+    <div class="live-badge">
+      <div class="live-dot"></div>
+      Synergist API
+    </div>
+    <button class="nav-cta" onclick="showConfigNote()">Connect live data →</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="page-header">
+    <h1>Live <strong>project tracker.</strong></h1>
+    <p class="page-sub">All active client work — pulled directly from Synergist. Updated every 30 minutes.</p>
+  </div>
+
+  <div class="metrics" id="metrics"></div>
+
+  <div class="controls">
+    <button class="filter-pill active" onclick="setFilter('all',this)">All projects</button>
+    <button class="filter-pill" onclick="setFilter('active',this)">Active</button>
+    <button class="filter-pill" onclick="setFilter('review',this)">In review</button>
+    <button class="filter-pill" onclick="setFilter('onhold',this)">On hold</button>
+    <button class="filter-pill" onclick="setFilter('complete',this)">Complete</button>
+
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="6" cy="6" r="4.5" stroke="#111110" stroke-width="1.2"/>
+        <line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="#111110" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <input class="search" type="text" placeholder="Search projects or clients…" id="searchInput" oninput="render()">
+    </div>
+
+    <div class="view-toggle">
+      <button class="vbtn active" id="vGrid" onclick="setView('grid')">Grid</button>
+      <button class="vbtn" id="vList" onclick="setView('list')">List</button>
+    </div>
+  </div>
+
+  <div id="projectContainer"></div>
+
+  <div class="api-config" id="apiConfig" style="display:none;">
+    <div class="api-icon">i</div>
+    <div class="api-text">
+      To connect live Synergist data, replace the mock data in this file with a fetch to:<br>
+      <code>https://&lt;SERVER&gt;/jsonAPI/projects.json?user=&lt;USER&gt;&amp;password=&lt;PASS&gt;&amp;version=4&amp;company=1&amp;modelstructure=projectslist&amp;style=modeldata</code><br><br>
+      Run this through a Make.com scenario or a lightweight proxy to avoid exposing credentials in the browser.
+      The JSON response maps directly to the project cards above — field names are a 1:1 match with the Synergist <code>projectslist</code> model.
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">jungle<span>.</span></div>
+    <div class="footer-note">Internal use only · Powered by Synergist API v4</div>
+  </footer>
+
+</div>
+
+<script>
+const PROJECTS = [
+  { projectNo:101, projectClientCode:"1/BOOTS",    projectClientName:"Boots UK",        projectName:"Always-On Social Q1–Q2 2026",              projectHandlerName:"Ro Mitchell",   projectCompleted:false, projectBudget:85000,  projectCreatedDate:"2026-01-15", _status:"active",   _spent:62000, _jobs:4 },
+  { projectNo:102, projectClientCode:"1/ASOS",     projectClientName:"ASOS",            projectName:"Creator Ecosystem Strategy",                projectHandlerName:"Jade Williams", projectCompleted:false, projectBudget:120000, projectCreatedDate:"2026-02-01", _status:"review",   _spent:118000,_jobs:6 },
+  { projectNo:103, projectClientCode:"1/REDBULL",  projectClientName:"Red Bull",        projectName:"Snowboarding Series — Platform Native",     projectHandlerName:"Ro Mitchell",   projectCompleted:false, projectBudget:55000,  projectCreatedDate:"2026-01-28", _status:"active",   _spent:21000, _jobs:3 },
+  { projectNo:104, projectClientCode:"1/DFS",      projectClientName:"DFS",             projectName:"Social Maturity Audit & Roadmap",           projectHandlerName:"Mal Summers",   projectCompleted:false, projectBudget:38000,  projectCreatedDate:"2026-03-02", _status:"active",   _spent:9500,  _jobs:2 },
+  { projectNo:105, projectClientCode:"1/DIAGEO",   projectClientName:"Diageo",          projectName:"Influencer Activation — Tanqueray",         projectHandlerName:"Jade Williams", projectCompleted:false, projectBudget:72000,  projectCreatedDate:"2026-02-14", _status:"onhold",   _spent:14000, _jobs:3 },
+  { projectNo:106, projectClientCode:"1/UNILEVER", projectClientName:"Unilever",        projectName:"Dove — Real Beauty Creator Campaign",       projectHandlerName:"Ro Mitchell",   projectCompleted:true,  projectBudget:95000,  projectCreatedDate:"2025-10-01", _status:"complete", _spent:93400, _jobs:7 },
+  { projectNo:107, projectClientCode:"1/PUMA",     projectClientName:"Puma UK",         projectName:"Run the Streets — UGC & Paid Social",       projectHandlerName:"Mal Summers",   projectCompleted:false, projectBudget:44000,  projectCreatedDate:"2026-03-10", _status:"active",   _spent:8200,  _jobs:2 },
+  { projectNo:108, projectClientCode:"1/ITV",      projectClientName:"ITV",             projectName:"Social Strategy & JungleIQ Onboarding",     projectHandlerName:"Jade Williams", projectCompleted:false, projectBudget:31000,  projectCreatedDate:"2026-03-20", _status:"review",   _spent:30100, _jobs:4 },
+  { projectNo:109, projectClientCode:"1/NETFLIX",  projectClientName:"Netflix UK",      projectName:"Creator-Led Launch — Q2 Slate",             projectHandlerName:"Ro Mitchell",   projectCompleted:false, projectBudget:67000,  projectCreatedDate:"2026-03-28", _status:"active",   _spent:12300, _jobs:3 },
+  { projectNo:110, projectClientCode:"1/HEINEKEN", projectClientName:"Heineken",        projectName:"UEFA Champions League Social",               projectHandlerName:"Mal Summers",   projectCompleted:false, projectBudget:89000,  projectCreatedDate:"2026-02-20", _status:"active",   _spent:54000, _jobs:5 },
+];
+
+let currentFilter = 'all';
+let currentView = 'grid';
+
+function initials(n) { return (n||'?').split(' ').map(p=>p[0]).join('').toUpperCase().slice(0,2); }
+
+function fmt(n) {
+  if (!n) return '—';
+  return n >= 1000 ? '£' + (n/1000).toFixed(0) + 'k' : '£' + n;
+}
+
+function statusClass(s) {
+  return {active:'s-active',review:'s-review',complete:'s-complete',onhold:'s-onhold'}[s]||'s-complete';
+}
+function statusLabel(s) {
+  return {active:'Active',review:'In review',complete:'Complete',onhold:'On hold'}[s]||s;
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function setView(v) {
+  currentView = v;
+  document.getElementById('vGrid').classList.toggle('active', v==='grid');
+  document.getElementById('vList').classList.toggle('active', v==='list');
+  render();
+}
+
+function showConfigNote() {
+  const el = document.getElementById('apiConfig');
+  el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+}
+
+function filtered() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  return PROJECTS.filter(p => {
+    const mf = currentFilter === 'all' || p._status === currentFilter;
+    const ms = !q || p.projectName.toLowerCase().includes(q) || p.projectClientName.toLowerCase().includes(q);
+    return mf && ms;
+  });
+}
+
+function renderMetrics() {
+  const live = PROJECTS.filter(p=>!p.projectCompleted);
+  const active = PROJECTS.filter(p=>p._status==='active').length;
+  const tBudget = PROJECTS.reduce((a,p)=>a+p.projectBudget,0);
+  const tSpent  = PROJECTS.reduce((a,p)=>a+p._spent,0);
+  const over    = PROJECTS.filter(p=>p._spent>p.projectBudget).length;
+  const pct     = Math.round(tSpent/tBudget*100);
+
+  document.getElementById('metrics').innerHTML = `
+    <div class="metric">
+      <div class="metric-label">Live projects</div>
+      <div class="metric-val"><strong>${live.length}</strong></div>
+      <div class="metric-sub">${active} currently active</div>
+      <div class="metric-accent"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Total budget</div>
+      <div class="metric-val"><strong>${fmt(tBudget)}</strong></div>
+      <div class="metric-sub">across all projects</div>
+      <div class="metric-accent"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Spent to date</div>
+      <div class="metric-val"><strong>${fmt(tSpent)}</strong></div>
+      <div class="metric-sub">${pct}% of total budget</div>
+      <div class="metric-accent ${pct>90?'warn':''}"></div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Over budget</div>
+      <div class="metric-val"><strong>${over}</strong></div>
+      <div class="metric-sub">project${over!==1?'s':''} flagged</div>
+      <div class="metric-accent ${over>0?'danger':''}"></div>
+    </div>
+  `;
+}
+
+function render() {
+  const projects = filtered();
+  const c = document.getElementById('projectContainer');
+
+  if (!projects.length) {
+    c.innerHTML = '<div class="empty">No projects match your filter.</div>';
+    return;
+  }
+
+  if (currentView === 'grid') {
+    c.className = 'project-grid';
+    c.innerHTML = projects.map(p => {
+      const pct  = p.projectBudget ? Math.min(Math.round(p._spent/p.projectBudget*100),100) : 0;
+      const over = p._spent > p.projectBudget;
+      const warn = pct >= 85 && !over;
+      return `
+        <div class="proj-card">
+          <div class="card-top">
+            <span class="proj-num">PROJECT #${p.projectNo}</span>
+            <span class="status-pill ${statusClass(p._status)}">${statusLabel(p._status)}</span>
+          </div>
+          <div class="proj-name">${p.projectName}</div>
+          <div class="proj-client">${p.projectClientName}</div>
+          <div class="proj-meta">
+            <div class="meta-item"><strong>${fmt(p.projectBudget)}</strong>Budget</div>
+            <div class="meta-item"><strong>${fmt(p._spent)}</strong>Spent</div>
+            <div class="meta-item"><strong>${p._jobs}</strong>Jobs</div>
+          </div>
+          <div class="prog-wrap">
+            <div class="prog-label">
+              <span>Budget used</span>
+              <span>${pct}%${over?' · over budget':warn?' · near limit':''}</span>
+            </div>
+            <div class="prog-bar">
+              <div class="prog-fill${over?' over':warn?' warn':''}" style="width:${pct}%"></div>
+            </div>
+          </div>
+          <div class="card-foot">
+            <div class="handler">
+              <div class="avatar">${initials(p.projectHandlerName)}</div>
+              ${p.projectHandlerName||'Unassigned'}
+            </div>
+            <div class="jobs-badge">${p._jobs} job${p._jobs!==1?'s':''}</div>
+          </div>
+        </div>`;
+    }).join('');
+  } else {
+    c.className = 'project-list';
+    c.innerHTML = `
+      <div class="list-header">
+        <span>Project</span>
+        <span>Client</span>
+        <span class="lh-handler">Handler</span>
+        <span class="lh-budget" style="text-align:right">Budget</span>
+        <span style="text-align:right">Status</span>
+      </div>
+      ${projects.map(p=>`
+      <div class="proj-row">
+        <div class="row-name">${p.projectName}</div>
+        <div class="row-client">${p.projectClientName}</div>
+        <div class="row-handler">${p.projectHandlerName||'—'}</div>
+        <div class="row-budget">${fmt(p.projectBudget)}</div>
+        <div class="row-status"><span class="status-pill ${statusClass(p._status)}">${statusLabel(p._status)}</span></div>
+      </div>`).join('')}
+    `;
+  }
+}
+
+renderMetrics();
+render();
+</script>
+</body>
+</html>
