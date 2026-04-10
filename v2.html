@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jungle — Client & Project Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F2EB;
+    --black: #111110;
+    --green: #8BFF57;
+    --green-bg: rgba(139,255,87,0.1);
+    --green-border: rgba(139,255,87,0.25);
+    --grey: #7A7972;
+    --grey-light: #E8E5DC;
+    --grey-mid: #CFCCC3;
+    --border: rgba(17,17,16,0.09);
+    --border-strong: rgba(17,17,16,0.2);
+    --red: #FF4D4D;
+    --amber: #F5A623;
+    --blue: #4A90D9;
+    --purple: #9B6DFF;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--cream);
+    color: var(--black);
+    font-family: 'DM Sans', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 200;
+    background: var(--black);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 2rem; height: 52px;
+  }
+  .nav-logo { font-size: 17px; font-weight: 500; letter-spacing: -0.5px; color: #fff; }
+  .nav-logo span { color: var(--green); }
+  .nav-right { display: flex; align-items: center; gap: 12px; }
+  .live-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,255,255,0.45); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+  .btn-primary {
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    color: var(--black); background: var(--green);
+    border: none; border-radius: 20px;
+    padding: 7px 16px; cursor: pointer; letter-spacing: -0.1px;
+    transition: opacity 0.15s; white-space: nowrap;
+  }
+  .btn-primary:hover { opacity: 0.85; }
+
+  /* ── LAYOUT ── */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    padding: 2.5rem 0 1.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+    display: flex; align-items: flex-end; justify-content: space-between;
+  }
+  .page-header h1 { font-size: 28px; font-weight: 300; letter-spacing: -0.8px; line-height: 1.1; }
+  .page-header h1 strong { font-weight: 500; }
+  .page-sub { font-size: 13px; color: var(--grey); margin-top: 4px; }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    display: flex; gap: 0;
+    background: var(--black); border-radius: 10px;
+    overflow: hidden; margin-bottom: 2rem;
+  }
+  .summary-item {
+    flex: 1; padding: 16px 20px;
+    border-right: 1px solid rgba(255,255,255,0.06);
+  }
+  .summary-item:last-child { border-right: none; }
+  .summary-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.7px; color: rgba(255,255,255,0.35); margin-bottom: 5px; }
+  .summary-val { font-size: 22px; font-weight: 300; letter-spacing: -0.8px; color: #fff; }
+  .summary-val strong { font-weight: 500; }
+  .summary-val .accent { color: var(--green); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 1.5rem; flex-wrap: wrap;
+  }
+  .filter-pill {
+    font-size: 12px; padding: 5px 14px; border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: transparent; color: var(--grey);
+    cursor: pointer; transition: all 0.12s; font-family: inherit;
+  }
+  .filter-pill:hover { border-color: var(--black); color: var(--black); }
+  .filter-pill.active { background: var(--black); color: var(--green); border-color: var(--black); }
+
+  .search-wrap { margin-left: auto; position: relative; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.3; pointer-events: none; }
+  .search {
+    font-family: inherit; font-size: 12px;
+    padding: 6px 12px 6px 32px;
+    border: 1px solid var(--border-strong); border-radius: 20px;
+    background: transparent; color: var(--black); width: 210px; outline: none;
+    transition: border-color 0.12s;
+  }
+  .search:focus { border-color: var(--black); }
+  .search::placeholder { color: var(--grey); }
+
+  /* ── CLIENT BLOCK ── */
+  .client-block {
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+    transition: border-color 0.12s;
+  }
+  .client-block:hover { border-color: var(--border-strong); }
+
+  .client-header {
+    display: flex; align-items: center;
+    padding: 14px 18px;
+    cursor: pointer;
+    background: #fff;
+    border-bottom: 1px solid transparent;
+    transition: background 0.12s;
+    gap: 12px;
+  }
+  .client-block.open .client-header {
+    border-bottom-color: var(--border);
+    background: #fafaf8;
+  }
+
+  .client-chevron {
+    width: 16px; height: 16px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--grey-mid); transition: transform 0.2s;
+  }
+  .client-block.open .client-chevron { transform: rotate(90deg); }
+
+  .client-name { font-size: 15px; font-weight: 500; letter-spacing: -0.3px; flex: 1; }
+
+  .client-tags { display: flex; gap: 6px; align-items: center; }
+
+  .client-meta { display: flex; gap: 20px; align-items: center; margin-left: auto; }
+  .client-stat { font-size: 11px; color: var(--grey); white-space: nowrap; }
+  .client-stat strong { font-size: 13px; font-weight: 500; color: var(--black); }
+
+  .source-tag {
+    font-size: 9px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
+    padding: 2px 7px; border-radius: 4px;
+  }
+  .src-synergist { background: var(--green-bg); color: #2A6000; border: 1px solid var(--green-border); }
+  .src-manual    { background: #EEE9FF; color: #5B3DBF; border: 1px solid rgba(155,109,255,0.25); }
+  .src-pitch     { background: #FFF3E0; color: #8A4500; border: 1px solid rgba(245,166,35,0.3); }
+
+  .add-project-btn {
+    font-family: inherit; font-size: 11px; font-weight: 500;
+    color: var(--grey); background: transparent;
+    border: 1px dashed var(--grey-mid); border-radius: 20px;
+    padding: 4px 12px; cursor: pointer; white-space: nowrap;
+    transition: all 0.12s;
+  }
+  .add-project-btn:hover { border-color: var(--black); color: var(--black); border-style: solid; }
+
+  /* ── PROJECTS TABLE ── */
+  .projects-table { display: none; }
+  .client-block.open .projects-table { display: block; }
+
+  .proj-row {
+    display: grid;
+    grid-template-columns: 28px 1fr 120px 100px 90px 90px 36px;
+    align-items: center; gap: 10px;
+    padding: 11px 18px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .proj-row:last-child { border-bottom: none; }
+  .proj-row:hover { background: #fafaf8; }
+
+  .proj-row-header {
+    font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--grey); padding: 8px 18px;
+    display: grid;
+    grid-template-columns: 28px 1fr 120px 100px 90px 90px 36px;
+    gap: 10px;
+    background: #fafaf8;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .proj-index { font-size: 10px; color: var(--grey-mid); text-align: center; }
+  .proj-name-cell {}
+  .proj-name-text { font-size: 13px; font-weight: 500; color: var(--black); line-height: 1.2; }
+  .proj-note { font-size: 11px; color: var(--grey); margin-top: 1px; }
+  .proj-handler { font-size: 12px; color: var(--grey); }
+  .proj-budget-cell { text-align: right; }
+  .proj-budget-val { font-size: 12px; font-weight: 500; color: var(--black); }
+  .proj-budget-pct { font-size: 10px; color: var(--grey); }
+
+  .stage-pill {
+    font-size: 10px; font-weight: 500; padding: 3px 9px; border-radius: 20px;
+    display: inline-block; white-space: nowrap; letter-spacing: 0.1px;
+  }
+  .st-active   { background: #D8FFB8; color: #2A6000; }
+  .st-review   { background: #FFF3C4; color: #7A5500; }
+  .st-onhold   { background: #FFE0E0; color: #8A0000; }
+  .st-complete { background: var(--grey-light); color: var(--grey); }
+  .st-pitch    { background: #FFF0D0; color: #8A4500; }
+  .st-scoping  { background: #EEE9FF; color: #5B3DBF; }
+  .st-verbal   { background: #D6F0FF; color: #0A5A8A; }
+  .st-lost     { background: #FFE0E0; color: #8A0000; }
+
+  .data-src-dot {
+    width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    display: inline-block; margin-right: 4px; vertical-align: middle;
+  }
+  .dot-synergist { background: var(--green); }
+  .dot-manual    { background: var(--purple); }
+  .dot-pitch     { background: var(--amber); }
+
+  .row-action-btn {
+    width: 26px; height: 26px; border-radius: 6px;
+    border: 1px solid var(--border); background: transparent;
+    cursor: pointer; color: var(--grey); font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.12s; font-family: inherit;
+  }
+  .row-action-btn:hover { background: var(--grey-light); color: var(--black); border-color: var(--border-strong); }
+
+  .add-row {
+    padding: 10px 18px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .add-row-btn {
+    font-family: inherit; font-size: 12px; color: var(--grey);
+    background: transparent; border: none; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    padding: 4px 0; transition: color 0.12s;
+  }
+  .add-row-btn:hover { color: var(--black); }
+  .add-row-btn svg { opacity: 0.5; }
+  .add-row-btn:hover svg { opacity: 1; }
+
+  /* ── MODAL ── */
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; z-index: 500;
+    background: rgba(17,17,16,0.5);
+    align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    background: #fff; border-radius: 14px;
+    width: 100%; max-width: 520px;
+    padding: 2rem; margin: 1rem;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.2);
+  }
+  .modal-title {
+    font-size: 18px; font-weight: 500; letter-spacing: -0.4px;
+    margin-bottom: 4px;
+  }
+  .modal-sub { font-size: 12px; color: var(--grey); margin-bottom: 1.5rem; }
+
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid.full { grid-template-columns: 1fr; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.span2 { grid-column: span 2; }
+
+  label {
+    font-size: 11px; font-weight: 500; color: var(--grey);
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  input[type="text"], input[type="number"], select, textarea {
+    font-family: inherit; font-size: 13px;
+    padding: 9px 12px;
+    border: 1px solid var(--border-strong); border-radius: 8px;
+    background: var(--cream); color: var(--black); outline: none;
+    transition: border-color 0.12s;
+    appearance: none; -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--black); }
+  textarea { resize: vertical; min-height: 70px; }
+
+  .modal-footer {
+    display: flex; justify-content: flex-end; gap: 8px;
+    margin-top: 1.5rem; padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+  }
+  .btn-ghost {
+    font-family: inherit; font-size: 13px; font-weight: 400;
+    color: var(--grey); background: transparent;
+    border: 1px solid var(--border-strong); border-radius: 8px;
+    padding: 8px 18px; cursor: pointer; transition: all 0.12s;
+  }
+  .btn-ghost:hover { border-color: var(--black); color: var(--black); }
+
+  .btn-save {
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    color: var(--black); background: var(--green);
+    border: none; border-radius: 8px;
+    padding: 8px 22px; cursor: pointer; transition: opacity 0.12s;
+  }
+  .btn-save:hover { opacity: 0.85; }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex; gap: 16px; align-items: center;
+    margin-bottom: 1.25rem; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--grey); }
+
+  /* ── EMPTY CLIENT ── */
+  .no-clients { text-align: center; padding: 5rem 0; color: var(--grey); }
+
+  @media (max-width: 780px) {
+    .proj-row, .proj-row-header { grid-template-columns: 1fr auto; }
+    .proj-row > *:nth-child(n+3):not(:nth-last-child(1)):not(:nth-last-child(2)) { display: none; }
+    .proj-row-header > *:nth-child(n+3) { display: none; }
+    .client-meta { display: none; }
+    .form-grid { grid-template-columns: 1fr; }
+    .field.span2 { grid-column: span 1; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">jungle<span>.</span>projects</div>
+  <div class="nav-right">
+    <div class="live-badge"><div class="live-dot"></div>Synergist + manual</div>
+    <button class="btn-primary" onclick="openModal('client')">+ Add client</button>
+    <button class="btn-primary" style="background:#fff;color:var(--black)" onclick="openModal('project', null)">+ Add project</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="page-header">
+    <div>
+      <h1>Client <strong>overview.</strong></h1>
+      <p class="page-sub">All clients and live projects — Synergist data plus ad hoc additions.</p>
+    </div>
+  </div>
+
+  <div class="summary-strip" id="summaryStrip"></div>
+
+  <div class="controls">
+    <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-pill" onclick="setFilter('active',this)">Active work</button>
+    <button class="filter-pill" onclick="setFilter('pitch',this)">Pitches</button>
+    <button class="filter-pill" onclick="setFilter('onhold',this)">On hold</button>
+    <button class="filter-pill" onclick="setFilter('complete',this)">Complete</button>
+
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="6" cy="6" r="4.5" stroke="#111110" stroke-width="1.2"/>
+        <line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="#111110" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <input class="search" type="text" id="searchInput" placeholder="Search clients or projects…" oninput="render()">
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="data-src-dot dot-synergist"></span>From Synergist</span>
+    <span class="legend-item"><span class="data-src-dot dot-manual"></span>Manually added</span>
+    <span class="legend-item"><span class="data-src-dot dot-pitch"></span>Pitch / pipeline</span>
+  </div>
+
+  <div id="clientList"></div>
+
+</div>
+
+<!-- ── ADD CLIENT / PROJECT MODAL ── -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" id="modalBox">
+    <div class="modal-title" id="modalTitle">Add client</div>
+    <div class="modal-sub" id="modalSub">New client or prospect to track</div>
+
+    <!-- CLIENT FORM -->
+    <div id="formClient">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Client / company name</label>
+          <input type="text" id="f-clientName" placeholder="e.g. Boots UK">
+        </div>
+        <div class="field">
+          <label>Sector</label>
+          <input type="text" id="f-clientSector" placeholder="e.g. Retail, FMCG">
+        </div>
+        <div class="field">
+          <label>Relationship status</label>
+          <select id="f-clientStatus">
+            <option value="prospect">Prospect</option>
+            <option value="active">Active client</option>
+            <option value="lapsed">Lapsed</option>
+          </select>
+        </div>
+        <div class="field span2">
+          <label>Notes</label>
+          <textarea id="f-clientNotes" placeholder="Any context, e.g. warm intro via AAR, currently in conversation with…"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECT FORM -->
+    <div id="formProject" style="display:none">
+      <div class="form-grid">
+        <div class="field span2">
+          <label>Project name</label>
+          <input type="text" id="f-projName" placeholder="e.g. Always-On Social Q3">
+        </div>
+        <div class="field">
+          <label>Client</label>
+          <select id="f-projClient"></select>
+        </div>
+        <div class="field">
+          <label>Handler / lead</label>
+          <input type="text" id="f-projHandler" placeholder="e.g. Ro Mitchell">
+        </div>
+        <div class="field">
+          <label>Stage</label>
+          <select id="f-projStage">
+            <option value="pitch">Pitch</option>
+            <option value="scoping">Scoping</option>
+            <option value="verbal">Verbal yes</option>
+            <option value="active">Active</option>
+            <option value="review">In review</option>
+            <option value="onhold">On hold</option>
+            <option value="complete">Complete</option>
+            <option value="lost">Lost</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Budget (£)</label>
+          <input type="number" id="f-projBudget" placeholder="0">
+        </div>
+        <div class="field span2">
+          <label>Notes</label>
+          <textarea id="f-projNotes" placeholder="Brief description, stage details, next steps…" style="min-height:60px"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────────────
+   DATA
+───────────────────────────────────────────── */
+let CLIENTS = [
+  { id:'c1', name:'Boots UK',    sector:'Retail / Health',   status:'active',   src:'synergist' },
+  { id:'c2', name:'ASOS',        sector:'Fashion',            status:'active',   src:'synergist' },
+  { id:'c3', name:'Red Bull',    sector:'FMCG / Sports',     status:'active',   src:'synergist' },
+  { id:'c4', name:'Diageo',      sector:'FMCG',               status:'active',   src:'synergist' },
+  { id:'c5', name:'Puma UK',     sector:'Sportswear',         status:'active',   src:'synergist' },
+  { id:'c6', name:'ITV',         sector:'Entertainment',      status:'active',   src:'synergist' },
+  { id:'c7', name:'Nestlé UK',   sector:'FMCG',               status:'prospect', src:'manual'    },
+  { id:'c8', name:'Marks & Spencer', sector:'Retail',        status:'prospect', src:'manual'    },
+];
+
+let PROJECTS = [
+  // Boots
+  { id:'p1',  clientId:'c1', name:'Always-On Social Q1–Q2 2026',          handler:'Ro Mitchell',   stage:'active',   budget:85000,  spent:62000, note:'',                                       src:'synergist', synId:101 },
+  { id:'p2',  clientId:'c1', name:'JungleIQ Analytics Onboarding',        handler:'Jade Williams', stage:'active',   budget:32000,  spent:8000,  note:'',                                       src:'synergist', synId:102 },
+  { id:'p3',  clientId:'c1', name:'Summer Campaign Pitch — Paid Social',  handler:'Mal Summers',   stage:'pitch',    budget:0,      spent:0,     note:'Pitch deck due 22 Apr. Competing vs 2 other agencies.', src:'manual',    synId:null },
+
+  // ASOS
+  { id:'p4',  clientId:'c2', name:'Creator Ecosystem Strategy',           handler:'Jade Williams', stage:'review',   budget:120000, spent:118000, note:'',                                      src:'synergist', synId:103 },
+  { id:'p5',  clientId:'c2', name:'TikTok Influencer Wave 3',             handler:'Ro Mitchell',   stage:'scoping',  budget:55000,  spent:0,     note:'SOW being drafted. Likely kicks off June.', src:'manual',    synId:null },
+
+  // Red Bull
+  { id:'p6',  clientId:'c3', name:'Snowboarding Series — Platform Native',handler:'Ro Mitchell',   stage:'active',   budget:55000,  spent:21000, note:'',                                       src:'synergist', synId:104 },
+  { id:'p7',  clientId:'c3', name:'F1 Miami — Creator Coverage',          handler:'Mal Summers',   stage:'verbal',   budget:40000,  spent:0,     note:'Verbal confirmed. Contract being drawn.',  src:'manual',    synId:null },
+  { id:'p8',  clientId:'c3', name:'Always-On Q3 Renewal',                 handler:'Jade Williams', stage:'scoping',  budget:0,      spent:0,     note:'Renewal discussions. Budget TBC.',         src:'manual',    synId:null },
+
+  // Diageo
+  { id:'p9',  clientId:'c4', name:'Influencer Activation — Tanqueray',    handler:'Jade Williams', stage:'onhold',   budget:72000,  spent:14000, note:'',                                       src:'synergist', synId:105 },
+  { id:'p10', clientId:'c4', name:'Guinness — 6 Nations Social',          handler:'Ro Mitchell',   stage:'complete', budget:48000,  spent:47200, note:'',                                       src:'synergist', synId:106 },
+  { id:'p11', clientId:'c4', name:'Diageo Innovation — Seedlip Relaunch', handler:'Mal Summers',   stage:'pitch',    budget:0,      spent:0,     note:'Speculative creative pitch. Internal budget £30k est.', src:'manual', synId:null },
+
+  // Puma
+  { id:'p12', clientId:'c5', name:'Run the Streets — UGC & Paid Social',  handler:'Mal Summers',   stage:'active',   budget:44000,  spent:8200,  note:'',                                       src:'synergist', synId:107 },
+  { id:'p13', clientId:'c5', name:'Puma x Local Creator Series',          handler:'Ro Mitchell',   stage:'scoping',  budget:0,      spent:0,     note:'Follow-on from Run the Streets. Awaiting brief.', src:'manual', synId:null },
+
+  // ITV
+  { id:'p14', clientId:'c6', name:'Social Strategy & JungleIQ Onboarding',handler:'Jade Williams', stage:'review',   budget:31000,  spent:30100, note:'',                                       src:'synergist', synId:108 },
+  { id:'p15', clientId:'c6', name:'ITVX Drama Launch — Influencer',       handler:'Mal Summers',   stage:'pitch',    budget:0,      spent:0,     note:'New brief in. Pitch mid-May.',             src:'manual',    synId:null },
+
+  // Nestlé (prospect)
+  { id:'p16', clientId:'c7', name:'Nescafé — Always-On Social Pitch',     handler:'Jade Williams', stage:'pitch',    budget:0,      spent:0,     note:'Intro via Ingenuity+. First meeting booked 15 Apr.', src:'pitch',  synId:null },
+  { id:'p17', clientId:'c7', name:'KitKat — Creator Campaign Pitch',      handler:'Ro Mitchell',   stage:'scoping',  budget:0,      spent:0,     note:'Separate brief from different brand team.',  src:'pitch', synId:null },
+
+  // M&S (prospect)
+  { id:'p18', clientId:'c8', name:'M&S Food — Social-First Strategy',     handler:'Mal Summers',   stage:'pitch',    budget:0,      spent:0,     note:'Warm intro from Observatory. Credentials sent.',      src:'pitch', synId:null },
+];
+
+/* ─────────────────────────────────────────────
+   STATE
+───────────────────────────────────────────── */
+let currentFilter = 'all';
+let openClients = new Set(CLIENTS.map(c=>c.id));
+let modalMode = null;
+let modalClientId = null;
+let idCounter = 100;
+
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function uid() { return 'x' + (++idCounter); }
+
+function fmt(n) {
+  if (!n) return '—';
+  return n >= 1000 ? '£' + Math.round(n/1000) + 'k' : '£' + n;
+}
+
+function stageClass(s) {
+  return { active:'st-active', review:'st-review', onhold:'st-onhold', complete:'st-complete',
+           pitch:'st-pitch', scoping:'st-scoping', verbal:'st-verbal', lost:'st-lost' }[s] || 'st-complete';
+}
+function stageLabel(s) {
+  return { active:'Active', review:'In review', onhold:'On hold', complete:'Complete',
+           pitch:'Pitch', scoping:'Scoping', verbal:'Verbal yes', lost:'Lost' }[s] || s;
+}
+
+function srcDot(src) {
+  const cls = { synergist:'dot-synergist', manual:'dot-manual', pitch:'dot-pitch' }[src] || 'dot-manual';
+  return `<span class="data-src-dot ${cls}"></span>`;
+}
+
+function matchesFilter(proj) {
+  if (currentFilter === 'all') return true;
+  if (currentFilter === 'active') return ['active','review','verbal','scoping'].includes(proj.stage);
+  if (currentFilter === 'pitch') return ['pitch'].includes(proj.stage);
+  if (currentFilter === 'onhold') return proj.stage === 'onhold';
+  if (currentFilter === 'complete') return proj.stage === 'complete';
+  return true;
+}
+
+function matchesSearch(client, projs) {
+  const q = document.getElementById('searchInput').value.toLowerCase().trim();
+  if (!q) return true;
+  if (client.name.toLowerCase().includes(q) || client.sector.toLowerCase().includes(q)) return true;
+  return projs.some(p => p.name.toLowerCase().includes(q) || (p.handler||'').toLowerCase().includes(q) || (p.note||'').toLowerCase().includes(q));
+}
+
+/* ─────────────────────────────────────────────
+   SUMMARY STRIP
+───────────────────────────────────────────── */
+function renderSummary() {
+  const activeProjs = PROJECTS.filter(p=>['active','review','verbal'].includes(p.stage));
+  const pitches = PROJECTS.filter(p=>p.stage==='pitch');
+  const totalBudget = PROJECTS.reduce((a,p)=>a+p.budget,0);
+  const totalSpent = PROJECTS.reduce((a,p)=>a+p.spent,0);
+  const activeClients = CLIENTS.filter(c=>c.status==='active').length;
+
+  document.getElementById('summaryStrip').innerHTML = `
+    <div class="summary-item">
+      <div class="summary-label">Active clients</div>
+      <div class="summary-val"><strong>${activeClients}</strong> <span style="font-size:13px;color:rgba(255,255,255,0.35)">+ ${CLIENTS.filter(c=>c.status==='prospect').length} prospects</span></div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Live projects</div>
+      <div class="summary-val"><strong>${activeProjs.length}</strong></div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Active pitches</div>
+      <div class="summary-val"><strong class="accent">${pitches.length}</strong></div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Total budget</div>
+      <div class="summary-val"><strong>${fmt(totalBudget)}</strong></div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Spent to date</div>
+      <div class="summary-val"><strong>${fmt(totalSpent)}</strong> <span style="font-size:13px;color:rgba(255,255,255,0.35)">${totalBudget?Math.round(totalSpent/totalBudget*100):0}%</span></div>
+    </div>
+  `;
+}
+
+/* ─────────────────────────────────────────────
+   RENDER
+───────────────────────────────────────────── */
+function render() {
+  renderSummary();
+  const list = document.getElementById('clientList');
+
+  const visibleClients = CLIENTS.filter(client => {
+    const projs = PROJECTS.filter(p => p.clientId === client.id);
+    const filteredProjs = projs.filter(matchesFilter);
+    if (filteredProjs.length === 0 && currentFilter !== 'all') return false;
+    return matchesSearch(client, filteredProjs.length ? filteredProjs : projs);
+  });
+
+  if (!visibleClients.length) {
+    list.innerHTML = '<div class="no-clients">No clients match your filter.</div>';
+    return;
+  }
+
+  list.innerHTML = visibleClients.map(client => {
+    const allProjs = PROJECTS.filter(p => p.clientId === client.id);
+    const visProjs = allProjs.filter(matchesFilter);
+    const projsToShow = (currentFilter === 'all') ? allProjs : visProjs;
+
+    const clientBudget = allProjs.reduce((a,p)=>a+p.budget,0);
+    const activeCount  = allProjs.filter(p=>['active','review','verbal'].includes(p.stage)).length;
+    const pitchCount   = allProjs.filter(p=>p.stage==='pitch').length;
+    const isOpen = openClients.has(client.id);
+
+    const srcTagMap = { synergist:'src-synergist', manual:'src-manual', pitch:'src-pitch' };
+    const srcLabelMap = { synergist:'Synergist', manual:'Manual', pitch:'Pitch' };
+
+    return `
+    <div class="client-block ${isOpen?'open':''}" id="cb-${client.id}">
+      <div class="client-header" onclick="toggleClient('${client.id}')">
+        <div class="client-chevron">
+          <svg width="8" height="12" viewBox="0 0 8 12" fill="none"><path d="M1.5 1.5L6.5 6L1.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="client-name">${client.name}</div>
+        <div class="client-tags">
+          <span class="source-tag ${srcTagMap[client.src]}">${srcLabelMap[client.src]}</span>
+        </div>
+        <div class="client-meta">
+          <div class="client-stat">${client.sector}</div>
+          <div class="client-stat"><strong>${allProjs.length}</strong> project${allProjs.length!==1?'s':''}</div>
+          ${activeCount ? `<div class="client-stat"><strong>${activeCount}</strong> active</div>` : ''}
+          ${pitchCount  ? `<div class="client-stat"><strong>${pitchCount}</strong> pitch${pitchCount!==1?'es':''}</div>` : ''}
+          ${clientBudget ? `<div class="client-stat"><strong>${fmt(clientBudget)}</strong></div>` : ''}
+        </div>
+        <button class="add-project-btn" onclick="event.stopPropagation(); openModal('project','${client.id}')">+ Add project</button>
+      </div>
+
+      <div class="projects-table">
+        <div class="proj-row-header">
+          <span></span>
+          <span>Project</span>
+          <span>Handler</span>
+          <span style="text-align:right">Budget</span>
+          <span>Stage</span>
+          <span></span>
+          <span></span>
+        </div>
+        ${projsToShow.map((p,i) => {
+          const pct = p.budget ? Math.min(Math.round(p.spent/p.budget*100),100) : null;
+          const over = p.budget && p.spent > p.budget;
+          return `
+          <div class="proj-row" id="pr-${p.id}">
+            <div class="proj-index">${srcDot(p.src)}</div>
+            <div class="proj-name-cell">
+              <div class="proj-name-text">${p.name}</div>
+              ${p.note ? `<div class="proj-note">${p.note}</div>` : ''}
+            </div>
+            <div class="proj-handler">${p.handler||'—'}</div>
+            <div class="proj-budget-cell">
+              <div class="proj-budget-val">${fmt(p.budget)}</div>
+              ${pct !== null ? `<div class="proj-budget-pct">${pct}% used${over?' ⚠':''}</div>` : ''}
+            </div>
+            <div><span class="stage-pill ${stageClass(p.stage)}">${stageLabel(p.stage)}</span></div>
+            <div></div>
+            <div>
+              <button class="row-action-btn" onclick="editProjectStage('${p.id}')" title="Edit stage">✎</button>
+            </div>
+          </div>`;
+        }).join('')}
+        <div class="add-row">
+          <button class="add-row-btn" onclick="openModal('project','${client.id}')">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Add project to ${client.name}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ─────────────────────────────────────────────
+   TOGGLE CLIENT
+───────────────────────────────────────────── */
+function toggleClient(id) {
+  if (openClients.has(id)) openClients.delete(id);
+  else openClients.add(id);
+  render();
+}
+
+/* ─────────────────────────────────────────────
+   FILTER
+───────────────────────────────────────────── */
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+/* ─────────────────────────────────────────────
+   MODAL
+───────────────────────────────────────────── */
+function openModal(mode, clientId) {
+  modalMode = mode;
+  modalClientId = clientId;
+
+  const backdrop = document.getElementById('modalBackdrop');
+  const formC = document.getElementById('formClient');
+  const formP = document.getElementById('formProject');
+  const title = document.getElementById('modalTitle');
+  const sub   = document.getElementById('modalSub');
+
+  if (mode === 'client') {
+    title.textContent = 'Add client or prospect';
+    sub.textContent   = 'Add a new client, lapsed account, or prospect you want to track.';
+    formC.style.display = 'block';
+    formP.style.display = 'none';
+    document.getElementById('f-clientName').value = '';
+    document.getElementById('f-clientSector').value = '';
+    document.getElementById('f-clientNotes').value = '';
+  } else {
+    title.textContent = clientId ? `Add project to ${CLIENTS.find(c=>c.id===clientId)?.name||'client'}` : 'Add project';
+    sub.textContent   = 'Add a live project, ad hoc work, or a pitch not yet in Synergist.';
+    formC.style.display = 'none';
+    formP.style.display = 'block';
+
+    // Populate client dropdown
+    const sel = document.getElementById('f-projClient');
+    sel.innerHTML = CLIENTS.map(c=>`<option value="${c.id}" ${c.id===clientId?'selected':''}>${c.name}</option>`).join('');
+
+    document.getElementById('f-projName').value = '';
+    document.getElementById('f-projHandler').value = '';
+    document.getElementById('f-projBudget').value = '';
+    document.getElementById('f-projNotes').value = '';
+    document.getElementById('f-projStage').value = 'pitch';
+  }
+
+  backdrop.classList.add('open');
+  setTimeout(()=>{ document.getElementById(mode==='client'?'f-clientName':'f-projName').focus(); }, 50);
+}
+
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modalBackdrop')) return;
+  document.getElementById('modalBackdrop').classList.remove('open');
+}
+
+function saveModal() {
+  if (modalMode === 'client') {
+    const name = document.getElementById('f-clientName').value.trim();
+    if (!name) { document.getElementById('f-clientName').focus(); return; }
+    const newClient = {
+      id: uid(),
+      name,
+      sector: document.getElementById('f-clientSector').value.trim() || 'Unknown',
+      status: document.getElementById('f-clientStatus').value,
+      src: 'manual'
+    };
+    CLIENTS.push(newClient);
+    openClients.add(newClient.id);
+    const note = document.getElementById('f-clientNotes').value.trim();
+    if (note) {
+      PROJECTS.push({
+        id: uid(), clientId: newClient.id,
+        name: 'Initial notes', handler: '', stage: 'scoping',
+        budget: 0, spent: 0, note, src: 'manual', synId: null
+      });
+    }
+  } else {
+    const name = document.getElementById('f-projName').value.trim();
+    if (!name) { document.getElementById('f-projName').focus(); return; }
+    const clientId = document.getElementById('f-projClient').value;
+    PROJECTS.push({
+      id: uid(), clientId,
+      name,
+      handler:  document.getElementById('f-projHandler').value.trim(),
+      stage:    document.getElementById('f-projStage').value,
+      budget:   parseInt(document.getElementById('f-projBudget').value)||0,
+      spent:    0,
+      note:     document.getElementById('f-projNotes').value.trim(),
+      src: 'manual', synId: null
+    });
+    openClients.add(clientId);
+  }
+
+  document.getElementById('modalBackdrop').classList.remove('open');
+  render();
+}
+
+/* ─────────────────────────────────────────────
+   QUICK STAGE EDIT
+───────────────────────────────────────────── */
+function editProjectStage(projId) {
+  const proj = PROJECTS.find(p=>p.id===projId);
+  if (!proj) return;
+  const stages = ['pitch','scoping','verbal','active','review','onhold','complete','lost'];
+  const current = proj.stage;
+  const next = stages[(stages.indexOf(current)+1) % stages.length];
+  const confirmed = confirm(`Move "${proj.name}" from "${stageLabel(current)}" → "${stageLabel(next)}"?`);
+  if (confirmed) { proj.stage = next; render(); }
+}
+
+/* ─────────────────────────────────────────────
+   KEYBOARD
+───────────────────────────────────────────── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.getElementById('modalBackdrop').classList.remove('open');
+});
+
+/* ─────────────────────────────────────────────
+   INIT
+───────────────────────────────────────────── */
+render();
+</script>
+</body>
+</html>
