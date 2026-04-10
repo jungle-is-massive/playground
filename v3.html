@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jungle — Client & Project Overview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F2EB;
+    --black: #111110;
+    --green: #8BFF57;
+    --green-bg: rgba(139,255,87,0.1);
+    --green-border: rgba(139,255,87,0.25);
+    --grey: #7A7972;
+    --grey-light: #E8E5DC;
+    --grey-mid: #CFCCC3;
+    --border: rgba(17,17,16,0.09);
+    --border-strong: rgba(17,17,16,0.2);
+    --red: #FF4D4D;
+    --amber: #F5A623;
+    --purple: #9B6DFF;
+    --blue: #4A90D9;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--cream); color: var(--black); font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 200; background: var(--black); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 52px; }
+  .nav-logo { font-size: 17px; font-weight: 500; letter-spacing: -0.5px; color: #fff; }
+  .nav-logo span { color: var(--green); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .live-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,255,255,0.45); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .btn-primary { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--black); background: var(--green); border: none; border-radius: 20px; padding: 7px 16px; cursor: pointer; transition: opacity 0.15s; white-space: nowrap; }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-secondary { font-family: inherit; font-size: 12px; font-weight: 500; color: #fff; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 6px 14px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+  .btn-secondary:hover { background: rgba(255,255,255,0.18); }
+
+  /* LAYOUT */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+  /* PAGE HEADER */
+  .page-header { padding: 2.5rem 0 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .page-header h1 { font-size: 28px; font-weight: 300; letter-spacing: -0.8px; line-height: 1.1; }
+  .page-header h1 strong { font-weight: 500; }
+  .page-sub { font-size: 13px; color: var(--grey); margin-top: 4px; }
+
+  /* SUMMARY STRIP */
+  .summary-strip { display: flex; background: var(--black); border-radius: 10px; overflow: hidden; margin-bottom: 2rem; }
+  .summary-item { flex: 1; padding: 16px 20px; border-right: 1px solid rgba(255,255,255,0.06); }
+  .summary-item:last-child { border-right: none; }
+  .summary-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.7px; color: rgba(255,255,255,0.35); margin-bottom: 5px; }
+  .summary-val { font-size: 22px; font-weight: 300; letter-spacing: -0.8px; color: #fff; }
+  .summary-val strong { font-weight: 500; }
+  .summary-val .accent { color: var(--green); }
+  .summary-sub { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+
+  /* CONTROLS */
+  .controls { display: flex; align-items: center; gap: 8px; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .filter-pill { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border-strong); background: transparent; color: var(--grey); cursor: pointer; transition: all 0.12s; font-family: inherit; }
+  .filter-pill:hover { border-color: var(--black); color: var(--black); }
+  .filter-pill.active { background: var(--black); color: var(--green); border-color: var(--black); }
+  .search-wrap { margin-left: auto; position: relative; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.3; pointer-events: none; }
+  .search { font-family: inherit; font-size: 12px; padding: 6px 12px 6px 32px; border: 1px solid var(--border-strong); border-radius: 20px; background: transparent; color: var(--black); width: 210px; outline: none; transition: border-color 0.12s; }
+  .search:focus { border-color: var(--black); }
+  .search::placeholder { color: var(--grey); }
+
+  /* LEGEND */
+  .legend { display: flex; gap: 16px; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--grey); }
+  .data-src-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+  .dot-synergist { background: var(--green); }
+  .dot-manual    { background: var(--purple); }
+  .dot-pitch     { background: var(--amber); }
+
+  /* CLIENT BLOCK */
+  .client-block { margin-bottom: 10px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; transition: border-color 0.12s; }
+  .client-block:hover { border-color: var(--border-strong); }
+  .client-header { display: flex; align-items: center; padding: 14px 18px; cursor: pointer; background: #fff; border-bottom: 1px solid transparent; transition: background 0.12s; gap: 12px; user-select: none; }
+  .client-block.open .client-header { border-bottom-color: var(--border); background: #fafaf8; }
+  .client-chevron { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--grey-mid); transition: transform 0.2s; }
+  .client-block.open .client-chevron { transform: rotate(90deg); }
+  .client-name { font-size: 15px; font-weight: 500; letter-spacing: -0.3px; flex: 1; min-width: 0; }
+  .client-sector { font-size: 12px; color: var(--grey); }
+  .client-meta { display: flex; gap: 18px; align-items: center; margin-left: auto; flex-shrink: 0; }
+  .client-stat { font-size: 11px; color: var(--grey); white-space: nowrap; }
+  .client-stat strong { font-size: 13px; font-weight: 500; color: var(--black); }
+  .source-tag { font-size: 9px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; }
+  .src-synergist { background: var(--green-bg); color: #2A6000; border: 1px solid var(--green-border); }
+  .src-manual    { background: #EEE9FF; color: #5B3DBF; border: 1px solid rgba(155,109,255,0.25); }
+  .src-pitch     { background: #FFF3E0; color: #8A4500; border: 1px solid rgba(245,166,35,0.3); }
+  .add-project-btn { font-family: inherit; font-size: 11px; font-weight: 500; color: var(--grey); background: transparent; border: 1px dashed var(--grey-mid); border-radius: 20px; padding: 4px 12px; cursor: pointer; white-space: nowrap; transition: all 0.12s; flex-shrink: 0; }
+  .add-project-btn:hover { border-color: var(--black); color: var(--black); border-style: solid; }
+
+  /* PROJECTS TABLE */
+  .projects-table { display: none; }
+  .client-block.open .projects-table { display: block; }
+  .proj-row-header { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--grey); padding: 8px 18px; display: grid; grid-template-columns: 24px 1fr 130px 100px 100px 40px; gap: 10px; background: #fafaf8; border-bottom: 1px solid var(--border); }
+  .proj-row { display: grid; grid-template-columns: 24px 1fr 130px 100px 100px 40px; align-items: center; gap: 10px; padding: 11px 18px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .proj-row:last-of-type { border-bottom: none; }
+  .proj-row:hover { background: #fafaf8; }
+  .proj-src { display: flex; align-items: center; justify-content: center; }
+  .proj-name-cell .proj-name-text { font-size: 13px; font-weight: 500; color: var(--black); line-height: 1.25; }
+  .proj-name-cell .proj-note { font-size: 11px; color: var(--grey); margin-top: 1px; }
+  .proj-handler { font-size: 12px; color: var(--grey); }
+  .proj-budget-cell { text-align: right; }
+  .proj-budget-val { font-size: 12px; font-weight: 500; color: var(--black); }
+  .proj-budget-pct { font-size: 10px; color: var(--grey); }
+  .stage-pill { font-size: 10px; font-weight: 500; padding: 3px 9px; border-radius: 20px; display: inline-block; white-space: nowrap; letter-spacing: 0.1px; cursor: pointer; transition: opacity 0.12s; }
+  .stage-pill:hover { opacity: 0.75; }
+  .st-active   { background: #D8FFB8; color: #2A6000; }
+  .st-review   { background: #FFF3C4; color: #7A5500; }
+  .st-onhold   { background: #FFE0E0; color: #8A0000; }
+  .st-complete { background: var(--grey-light); color: var(--grey); }
+  .st-pitch    { background: #FFF0D0; color: #8A4500; }
+  .st-scoping  { background: #EEE9FF; color: #5B3DBF; }
+  .st-verbal   { background: #D6F0FF; color: #0A5A8A; }
+  .st-lost     { background: #FFE0E0; color: #8A0000; }
+  .row-del-btn { width: 26px; height: 26px; border-radius: 6px; border: 1px solid transparent; background: transparent; cursor: pointer; color: var(--grey-mid); font-size: 14px; display: flex; align-items: center; justify-content: center; transition: all 0.12s; font-family: inherit; opacity: 0; }
+  .proj-row:hover .row-del-btn { opacity: 1; }
+  .row-del-btn:hover { background: #FFE0E0; color: var(--red); border-color: rgba(255,77,77,0.2); }
+  .add-row { padding: 10px 18px; }
+  .add-row-btn { font-family: inherit; font-size: 12px; color: var(--grey); background: transparent; border: none; cursor: pointer; display: flex; align-items: center; gap: 6px; padding: 4px 0; transition: color 0.12s; }
+  .add-row-btn:hover { color: var(--black); }
+
+  /* STAGE DROPDOWN (inline) */
+  .stage-select { font-family: inherit; font-size: 10px; font-weight: 500; border: none; border-radius: 20px; padding: 3px 9px; cursor: pointer; outline: none; appearance: none; -webkit-appearance: none; }
+  .stage-select.st-active   { background: #D8FFB8; color: #2A6000; }
+  .stage-select.st-review   { background: #FFF3C4; color: #7A5500; }
+  .stage-select.st-onhold   { background: #FFE0E0; color: #8A0000; }
+  .stage-select.st-complete { background: var(--grey-light); color: var(--grey); }
+  .stage-select.st-pitch    { background: #FFF0D0; color: #8A4500; }
+  .stage-select.st-scoping  { background: #EEE9FF; color: #5B3DBF; }
+  .stage-select.st-verbal   { background: #D6F0FF; color: #0A5A8A; }
+  .stage-select.st-lost     { background: #FFE0E0; color: #8A0000; }
+
+  /* MODAL */
+  .modal-backdrop { display: none; position: fixed; inset: 0; z-index: 500; background: rgba(17,17,16,0.55); align-items: center; justify-content: center; }
+  .modal-backdrop.open { display: flex; }
+  .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 520px; padding: 2rem; margin: 1rem; box-shadow: 0 24px 60px rgba(0,0,0,0.2); }
+  .modal-title { font-size: 18px; font-weight: 500; letter-spacing: -0.4px; margin-bottom: 4px; }
+  .modal-sub { font-size: 12px; color: var(--grey); margin-bottom: 1.5rem; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.span2 { grid-column: span 2; }
+  label { font-size: 11px; font-weight: 500; color: var(--grey); text-transform: uppercase; letter-spacing: 0.5px; }
+  input[type="text"], input[type="number"], select, textarea { font-family: inherit; font-size: 13px; padding: 9px 12px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--cream); color: var(--black); outline: none; transition: border-color 0.12s; appearance: none; -webkit-appearance: none; width: 100%; }
+  input:focus, select:focus, textarea:focus { border-color: var(--black); background: #fff; }
+  textarea { resize: vertical; min-height: 70px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+  .btn-ghost { font-family: inherit; font-size: 13px; color: var(--grey); background: transparent; border: 1px solid var(--border-strong); border-radius: 8px; padding: 8px 18px; cursor: pointer; transition: all 0.12s; }
+  .btn-ghost:hover { border-color: var(--black); color: var(--black); }
+  .btn-save { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--black); background: var(--green); border: none; border-radius: 8px; padding: 8px 22px; cursor: pointer; transition: opacity 0.12s; }
+  .btn-save:hover { opacity: 0.85; }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--black); color: #fff; font-size: 13px; padding: 10px 20px; border-radius: 8px; opacity: 0; transition: all 0.25s; pointer-events: none; z-index: 999; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.error { background: var(--red); }
+
+  /* LOADING */
+  .loading { text-align: center; padding: 4rem 0; color: var(--grey); }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--grey-light); border-top-color: var(--black); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; margin-bottom: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* EMPTY */
+  .no-clients { text-align: center; padding: 5rem 0; color: var(--grey); }
+
+  @media (max-width: 780px) {
+    .proj-row, .proj-row-header { grid-template-columns: 24px 1fr auto 40px; }
+    .proj-row > *:nth-child(3), .proj-row > *:nth-child(4),
+    .proj-row-header > *:nth-child(3), .proj-row-header > *:nth-child(4) { display: none; }
+    .client-meta { display: none; }
+    .form-grid { grid-template-columns: 1fr; }
+    .field.span2 { grid-column: span 1; }
+    .summary-strip { flex-wrap: wrap; }
+    .summary-item { min-width: 50%; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">jungle<span>.</span>projects</div>
+  <div class="nav-right">
+    <div class="live-badge"><div class="live-dot"></div>Live · Supabase</div>
+    <button class="btn-secondary" onclick="openModal('project',null)">+ Add project</button>
+    <button class="btn-primary" onclick="openModal('client',null)">+ Add client</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="page-header">
+    <h1>Client <strong>overview.</strong></h1>
+    <p class="page-sub">All clients and live projects — Synergist data plus ad hoc additions. Changes save instantly.</p>
+  </div>
+
+  <div class="summary-strip" id="summaryStrip">
+    <div class="summary-item"><div class="summary-label">Loading</div><div class="summary-val">—</div></div>
+  </div>
+
+  <div class="controls">
+    <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-pill" onclick="setFilter('active',this)">Active work</button>
+    <button class="filter-pill" onclick="setFilter('pitch',this)">Pitches</button>
+    <button class="filter-pill" onclick="setFilter('onhold',this)">On hold</button>
+    <button class="filter-pill" onclick="setFilter('complete',this)">Complete</button>
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="6" cy="6" r="4.5" stroke="#111110" stroke-width="1.2"/>
+        <line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="#111110" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <input class="search" type="text" id="searchInput" placeholder="Search clients or projects…" oninput="renderClients()">
+    </div>
+  </div>
+
+  <div class="legend">
+    <span class="legend-item"><span class="data-src-dot dot-synergist"></span>From Synergist</span>
+    <span class="legend-item"><span class="data-src-dot dot-manual"></span>Manually added</span>
+    <span class="legend-item"><span class="data-src-dot dot-pitch"></span>Pitch / pipeline</span>
+  </div>
+
+  <div id="clientList"><div class="loading"><div class="spinner"></div><br>Loading from Supabase…</div></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="backdropClick(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle"></div>
+    <div class="modal-sub" id="modalSub"></div>
+
+    <div id="formClient" style="display:none">
+      <div class="form-grid">
+        <div class="field span2"><label>Client / company name</label><input type="text" id="f-clientName" placeholder="e.g. Boots UK"></div>
+        <div class="field"><label>Sector</label><input type="text" id="f-clientSector" placeholder="e.g. Retail, FMCG"></div>
+        <div class="field"><label>Relationship status</label>
+          <select id="f-clientStatus">
+            <option value="prospect">Prospect</option>
+            <option value="active">Active client</option>
+            <option value="lapsed">Lapsed</option>
+          </select>
+        </div>
+        <div class="field span2"><label>Notes</label><textarea id="f-clientNotes" placeholder="Context, intro route, stage of conversation…"></textarea></div>
+      </div>
+    </div>
+
+    <div id="formProject" style="display:none">
+      <div class="form-grid">
+        <div class="field span2"><label>Project name</label><input type="text" id="f-projName" placeholder="e.g. Always-On Social Q3"></div>
+        <div class="field"><label>Client</label><select id="f-projClient"></select></div>
+        <div class="field"><label>Handler / lead</label><input type="text" id="f-projHandler" placeholder="e.g. Ro Mitchell"></div>
+        <div class="field"><label>Stage</label>
+          <select id="f-projStage">
+            <option value="pitch">Pitch</option>
+            <option value="scoping">Scoping</option>
+            <option value="verbal">Verbal yes</option>
+            <option value="active">Active</option>
+            <option value="review">In review</option>
+            <option value="onhold">On hold</option>
+            <option value="complete">Complete</option>
+            <option value="lost">Lost</option>
+          </select>
+        </div>
+        <div class="field"><label>Budget (£)</label><input type="number" id="f-projBudget" placeholder="0"></div>
+        <div class="field span2"><label>Notes</label><textarea id="f-projNotes" placeholder="Brief summary, next steps, context…" style="min-height:60px"></textarea></div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" id="btnSave" onclick="saveModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ── CONFIG ── */
+const SB_URL  = "https://iehkvlyjumkzccoqqgxl.supabase.co";
+const SB_KEY  = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllaGt2bHlqdW1remNjb3FxZ3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTMwNzYsImV4cCI6MjA5MTM4OTA3Nn0.pF9K9aBwWN10JRT_ODTLPzsdPKH3X0CW30WrPMn9lGs";
+const HEADERS = { "apikey": SB_KEY, "Authorization": `Bearer ${SB_KEY}`, "Content-Type": "application/json", "Prefer": "return=representation" };
+
+/* ── STATE ── */
+let CLIENTS  = [];
+let PROJECTS = [];
+let openClients = new Set();
+let currentFilter = 'all';
+let modalMode = null;
+let modalClientId = null;
+
+/* ── SEED DATA (runs once if DB is empty) ── */
+const SEED_CLIENTS = [
+  { name:"Boots UK",          sector:"Retail / Health",   status:"active",   src:"synergist" },
+  { name:"ASOS",              sector:"Fashion",            status:"active",   src:"synergist" },
+  { name:"Red Bull",          sector:"FMCG / Sports",     status:"active",   src:"synergist" },
+  { name:"Diageo",            sector:"FMCG",              status:"active",   src:"synergist" },
+  { name:"Puma UK",           sector:"Sportswear",         status:"active",   src:"synergist" },
+  { name:"ITV",               sector:"Entertainment",      status:"active",   src:"synergist" },
+  { name:"Nestlé UK",         sector:"FMCG",              status:"prospect", src:"manual"    },
+  { name:"Marks & Spencer",   sector:"Retail",             status:"prospect", src:"manual"    },
+];
+
+const SEED_PROJECTS = (clientMap) => [
+  { client_id:clientMap["Boots UK"],        name:"Always-On Social Q1–Q2 2026",           handler:"Ro Mitchell",   stage:"active",   budget:85000,  spent:62000, note:"",                                               src:"synergist" },
+  { client_id:clientMap["Boots UK"],        name:"JungleIQ Analytics Onboarding",         handler:"Jade Williams", stage:"active",   budget:32000,  spent:8000,  note:"",                                               src:"synergist" },
+  { client_id:clientMap["Boots UK"],        name:"Summer Campaign Pitch — Paid Social",   handler:"Mal Summers",   stage:"pitch",    budget:0,      spent:0,     note:"Pitch deck due 22 Apr. Competing vs 2 others.",   src:"manual"    },
+  { client_id:clientMap["ASOS"],            name:"Creator Ecosystem Strategy",            handler:"Jade Williams", stage:"review",   budget:120000, spent:118000,note:"",                                               src:"synergist" },
+  { client_id:clientMap["ASOS"],            name:"TikTok Influencer Wave 3",              handler:"Ro Mitchell",   stage:"scoping",  budget:55000,  spent:0,     note:"SOW being drafted. Likely kicks off June.",       src:"manual"    },
+  { client_id:clientMap["Red Bull"],        name:"Snowboarding Series — Platform Native", handler:"Ro Mitchell",   stage:"active",   budget:55000,  spent:21000, note:"",                                               src:"synergist" },
+  { client_id:clientMap["Red Bull"],        name:"F1 Miami — Creator Coverage",           handler:"Mal Summers",   stage:"verbal",   budget:40000,  spent:0,     note:"Verbal confirmed. Contract being drawn.",         src:"manual"    },
+  { client_id:clientMap["Red Bull"],        name:"Always-On Q3 Renewal",                 handler:"Jade Williams", stage:"scoping",  budget:0,      spent:0,     note:"Renewal discussions. Budget TBC.",                src:"manual"    },
+  { client_id:clientMap["Diageo"],          name:"Influencer Activation — Tanqueray",    handler:"Jade Williams", stage:"onhold",   budget:72000,  spent:14000, note:"",                                               src:"synergist" },
+  { client_id:clientMap["Diageo"],          name:"Guinness — 6 Nations Social",          handler:"Ro Mitchell",   stage:"complete", budget:48000,  spent:47200, note:"",                                               src:"synergist" },
+  { client_id:clientMap["Diageo"],          name:"Seedlip Relaunch Pitch",               handler:"Mal Summers",   stage:"pitch",    budget:0,      spent:0,     note:"Speculative creative pitch. Budget est. £30k.",   src:"manual"    },
+  { client_id:clientMap["Puma UK"],         name:"Run the Streets — UGC & Paid Social",  handler:"Mal Summers",   stage:"active",   budget:44000,  spent:8200,  note:"",                                               src:"synergist" },
+  { client_id:clientMap["Puma UK"],         name:"Puma x Local Creator Series",          handler:"Ro Mitchell",   stage:"scoping",  budget:0,      spent:0,     note:"Follow-on from Run the Streets. Awaiting brief.", src:"manual"    },
+  { client_id:clientMap["ITV"],             name:"Social Strategy & JungleIQ Onboarding",handler:"Jade Williams", stage:"review",   budget:31000,  spent:30100, note:"",                                               src:"synergist" },
+  { client_id:clientMap["ITV"],             name:"ITVX Drama Launch — Influencer",       handler:"Mal Summers",   stage:"pitch",    budget:0,      spent:0,     note:"New brief in. Pitch mid-May.",                    src:"manual"    },
+  { client_id:clientMap["Nestlé UK"],       name:"Nescafé — Always-On Social Pitch",     handler:"Jade Williams", stage:"pitch",    budget:0,      spent:0,     note:"Intro via Ingenuity+. First meeting 15 Apr.",     src:"pitch"     },
+  { client_id:clientMap["Nestlé UK"],       name:"KitKat — Creator Campaign Pitch",      handler:"Ro Mitchell",   stage:"scoping",  budget:0,      spent:0,     note:"Separate brief from different brand team.",       src:"pitch"     },
+  { client_id:clientMap["Marks & Spencer"], name:"M&S Food — Social-First Strategy",     handler:"Mal Summers",   stage:"pitch",    budget:0,      spent:0,     note:"Warm intro from Observatory. Credentials sent.",  src:"pitch"     },
+];
+
+/* ── SUPABASE API ── */
+async function sb(method, table, body, params = "") {
+  const res = await fetch(`${SB_URL}/rest/v1/${table}${params}`, {
+    method, headers: HEADERS,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (!res.ok) { const e = await res.text(); throw new Error(`${res.status}: ${e}`); }
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
+}
+
+/* ── SEED IF EMPTY ── */
+async function seedIfEmpty() {
+  const existing = await sb("GET", "clients", null, "?select=id&limit=1");
+  if (existing && existing.length > 0) return;
+
+  toast("First run — seeding initial data…");
+
+  const clients = await sb("POST", "clients", SEED_CLIENTS, "?select=id,name");
+  const clientMap = {};
+  clients.forEach(c => clientMap[c.name] = c.id);
+
+  await sb("POST", "projects", SEED_PROJECTS(clientMap));
+  toast("Data seeded ✓");
+}
+
+/* ── LOAD DATA ── */
+async function loadData() {
+  [CLIENTS, PROJECTS] = await Promise.all([
+    sb("GET", "clients", null, "?select=*&order=name.asc"),
+    sb("GET", "projects", null, "?select=*&order=created_at.asc")
+  ]);
+  if (openClients.size === 0) {
+    CLIENTS.forEach(c => openClients.add(c.id));
+  }
+}
+
+/* ── INIT ── */
+async function init() {
+  try {
+    await seedIfEmpty();
+    await loadData();
+    renderAll();
+  } catch(e) {
+    document.getElementById('clientList').innerHTML =
+      `<div class="no-clients">Could not connect to Supabase.<br><small style="color:var(--grey)">${e.message}</small></div>`;
+    toastError("Connection failed");
+  }
+}
+
+/* ── HELPERS ── */
+function fmt(n) {
+  if (!n) return '—';
+  return n >= 1000 ? '£' + Math.round(n/1000) + 'k' : '£' + n;
+}
+function stageClass(s) {
+  return {active:'st-active',review:'st-review',onhold:'st-onhold',complete:'st-complete',pitch:'st-pitch',scoping:'st-scoping',verbal:'st-verbal',lost:'st-lost'}[s]||'st-complete';
+}
+function stageLabel(s) {
+  return {active:'Active',review:'In review',onhold:'On hold',complete:'Complete',pitch:'Pitch',scoping:'Scoping',verbal:'Verbal yes',lost:'Lost'}[s]||s;
+}
+function srcDotHtml(src) {
+  const cls = {synergist:'dot-synergist',manual:'dot-manual',pitch:'dot-pitch'}[src]||'dot-manual';
+  return `<span class="data-src-dot ${cls}" title="${src}"></span>`;
+}
+function srcTagHtml(src) {
+  const cls = {synergist:'src-synergist',manual:'src-manual',pitch:'src-pitch'}[src]||'src-manual';
+  const lbl = {synergist:'Synergist',manual:'Manual',pitch:'Pitch'}[src]||src;
+  return `<span class="source-tag ${cls}">${lbl}</span>`;
+}
+function matchesFilter(p) {
+  if (currentFilter === 'all') return true;
+  if (currentFilter === 'active') return ['active','review','verbal','scoping'].includes(p.stage);
+  if (currentFilter === 'pitch') return p.stage === 'pitch';
+  if (currentFilter === 'onhold') return p.stage === 'onhold';
+  if (currentFilter === 'complete') return p.stage === 'complete';
+  return true;
+}
+function matchesSearch(client, projs) {
+  const q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
+  if (!q) return true;
+  if (client.name.toLowerCase().includes(q) || (client.sector||'').toLowerCase().includes(q)) return true;
+  return projs.some(p => p.name.toLowerCase().includes(q) || (p.handler||'').toLowerCase().includes(q) || (p.note||'').toLowerCase().includes(q));
+}
+
+/* ── TOAST ── */
+let toastTimer;
+function showToast(msg, isError) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'toast show' + (isError ? ' error' : '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.className = 'toast', 2800);
+}
+function toast(msg) { showToast(msg, false); }
+function toastError(msg) { showToast(msg, true); }
+
+/* ── RENDER SUMMARY ── */
+function renderSummary() {
+  const activeProjs = PROJECTS.filter(p=>['active','review','verbal'].includes(p.stage));
+  const pitches     = PROJECTS.filter(p=>p.stage==='pitch');
+  const tBudget     = PROJECTS.reduce((a,p)=>a+(p.budget||0),0);
+  const tSpent      = PROJECTS.reduce((a,p)=>a+(p.spent||0),0);
+  const activeC     = CLIENTS.filter(c=>c.status==='active').length;
+  const prospectC   = CLIENTS.filter(c=>c.status==='prospect').length;
+  const pct         = tBudget ? Math.round(tSpent/tBudget*100) : 0;
+
+  document.getElementById('summaryStrip').innerHTML = `
+    <div class="summary-item">
+      <div class="summary-label">Active clients</div>
+      <div class="summary-val"><strong>${activeC}</strong></div>
+      <div class="summary-sub">+ ${prospectC} prospect${prospectC!==1?'s':''}</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Live projects</div>
+      <div class="summary-val"><strong>${activeProjs.length}</strong></div>
+      <div class="summary-sub">${PROJECTS.length} total</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Active pitches</div>
+      <div class="summary-val"><strong class="accent">${pitches.length}</strong></div>
+      <div class="summary-sub">in pipeline</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Total budget</div>
+      <div class="summary-val"><strong>${fmt(tBudget)}</strong></div>
+      <div class="summary-sub">confirmed work</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Spent to date</div>
+      <div class="summary-val"><strong>${fmt(tSpent)}</strong></div>
+      <div class="summary-sub">${pct}% of budget</div>
+    </div>
+  `;
+}
+
+/* ── RENDER CLIENTS ── */
+function renderClients() {
+  const list = document.getElementById('clientList');
+  const q = (document.getElementById('searchInput').value||'').toLowerCase().trim();
+
+  const visible = CLIENTS.filter(client => {
+    const projs = PROJECTS.filter(p=>p.client_id===client.id);
+    const filtered = projs.filter(matchesFilter);
+    if (currentFilter !== 'all' && filtered.length === 0) return false;
+    return matchesSearch(client, filtered.length ? filtered : projs);
+  });
+
+  if (!visible.length) {
+    list.innerHTML = '<div class="no-clients">No clients match your filter.</div>';
+    return;
+  }
+
+  list.innerHTML = visible.map(client => {
+    const allP  = PROJECTS.filter(p=>p.client_id===client.id);
+    const showP = currentFilter === 'all' ? allP : allP.filter(matchesFilter);
+    const tBudget = allP.reduce((a,p)=>a+(p.budget||0),0);
+    const activeN = allP.filter(p=>['active','review','verbal'].includes(p.stage)).length;
+    const pitchN  = allP.filter(p=>p.stage==='pitch').length;
+    const isOpen  = openClients.has(client.id);
+    const STAGES  = ['pitch','scoping','verbal','active','review','onhold','complete','lost'];
+
+    return `
+    <div class="client-block ${isOpen?'open':''}" id="cb-${client.id}">
+      <div class="client-header" onclick="toggleClient('${client.id}')">
+        <div class="client-chevron">
+          <svg width="8" height="12" viewBox="0 0 8 12" fill="none"><path d="M1.5 1.5L6.5 6L1.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="client-name">${client.name}</div>
+        ${srcTagHtml(client.src)}
+        <div class="client-meta">
+          <div class="client-stat">${client.sector||''}</div>
+          <div class="client-stat"><strong>${allP.length}</strong> project${allP.length!==1?'s':''}</div>
+          ${activeN ? `<div class="client-stat"><strong>${activeN}</strong> active</div>` : ''}
+          ${pitchN  ? `<div class="client-stat"><strong>${pitchN}</strong> pitch${pitchN!==1?'es':''}</div>` : ''}
+          ${tBudget ? `<div class="client-stat"><strong>${fmt(tBudget)}</strong></div>` : ''}
+        </div>
+        <button class="add-project-btn" onclick="event.stopPropagation();openModal('project','${client.id}')">+ Add project</button>
+      </div>
+
+      <div class="projects-table">
+        ${showP.length ? `
+        <div class="proj-row-header">
+          <span></span><span>Project</span><span>Handler</span>
+          <span style="text-align:right">Budget</span><span>Stage</span><span></span>
+        </div>
+        ${showP.map(p => {
+          const pct  = p.budget ? Math.min(Math.round((p.spent||0)/p.budget*100),100) : null;
+          const over = p.budget && (p.spent||0) > p.budget;
+          const stageOpts = STAGES.map(s=>`<option value="${s}" ${s===p.stage?'selected':''}>${stageLabel(s)}</option>`).join('');
+          return `
+          <div class="proj-row" id="pr-${p.id}">
+            <div class="proj-src">${srcDotHtml(p.src)}</div>
+            <div class="proj-name-cell">
+              <div class="proj-name-text">${p.name}</div>
+              ${p.note ? `<div class="proj-note">${p.note}</div>` : ''}
+            </div>
+            <div class="proj-handler">${p.handler||'—'}</div>
+            <div class="proj-budget-cell">
+              <div class="proj-budget-val">${fmt(p.budget)}</div>
+              ${pct !== null ? `<div class="proj-budget-pct">${pct}% used${over?' ⚠':''}</div>` : ''}
+            </div>
+            <div>
+              <select class="stage-select ${stageClass(p.stage)}" onchange="updateStage('${p.id}',this)">
+                ${stageOpts}
+              </select>
+            </div>
+            <div>
+              <button class="row-del-btn" onclick="deleteProject('${p.id}','${p.name.replace(/'/g,"\\'")}')" title="Delete project">✕</button>
+            </div>
+          </div>`;
+        }).join('')}` : ''}
+        <div class="add-row">
+          <button class="add-row-btn" onclick="openModal('project','${client.id}')">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><line x1="6" y1="1" x2="6" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Add project to ${client.name}
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderSummary();
+  renderClients();
+}
+
+/* ── TOGGLE ── */
+function toggleClient(id) {
+  openClients.has(id) ? openClients.delete(id) : openClients.add(id);
+  renderClients();
+}
+
+/* ── FILTER ── */
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderClients();
+}
+
+/* ── UPDATE STAGE (inline dropdown) ── */
+async function updateStage(projId, selectEl) {
+  const newStage = selectEl.value;
+  selectEl.className = `stage-select ${stageClass(newStage)}`;
+  try {
+    await sb("PATCH", `projects?id=eq.${projId}`, { stage: newStage, updated_at: new Date().toISOString() });
+    const proj = PROJECTS.find(p=>p.id===projId);
+    if (proj) proj.stage = newStage;
+    renderSummary();
+    toast("Stage updated ✓");
+  } catch(e) {
+    toastError("Failed to update stage");
+  }
+}
+
+/* ── DELETE PROJECT ── */
+async function deleteProject(projId, name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    await sb("DELETE", `projects?id=eq.${projId}`, null);
+    PROJECTS = PROJECTS.filter(p=>p.id!==projId);
+    renderAll();
+    toast("Project deleted");
+  } catch(e) {
+    toastError("Failed to delete project");
+  }
+}
+
+/* ── MODAL ── */
+function openModal(mode, clientId) {
+  modalMode = mode;
+  modalClientId = clientId;
+  const formC = document.getElementById('formClient');
+  const formP = document.getElementById('formProject');
+  const title = document.getElementById('modalTitle');
+  const sub   = document.getElementById('modalSub');
+  const btn   = document.getElementById('btnSave');
+  btn.disabled = false;
+  btn.textContent = 'Save';
+
+  if (mode === 'client') {
+    title.textContent = 'Add client or prospect';
+    sub.textContent   = 'Add a new client, lapsed account, or prospect you want to track.';
+    formC.style.display = 'block';
+    formP.style.display = 'none';
+    document.getElementById('f-clientName').value   = '';
+    document.getElementById('f-clientSector').value = '';
+    document.getElementById('f-clientNotes').value  = '';
+    document.getElementById('f-clientStatus').value = 'prospect';
+    setTimeout(()=>document.getElementById('f-clientName').focus(), 60);
+  } else {
+    const clientName = clientId ? CLIENTS.find(c=>c.id===clientId)?.name : null;
+    title.textContent = clientName ? `Add project — ${clientName}` : 'Add project';
+    sub.textContent   = 'Add a live project, ad hoc work, or a pitch not yet in Synergist.';
+    formC.style.display = 'none';
+    formP.style.display = 'block';
+    const sel = document.getElementById('f-projClient');
+    sel.innerHTML = CLIENTS.map(c=>`<option value="${c.id}" ${c.id===clientId?'selected':''}>${c.name}</option>`).join('');
+    document.getElementById('f-projName').value    = '';
+    document.getElementById('f-projHandler').value = '';
+    document.getElementById('f-projBudget').value  = '';
+    document.getElementById('f-projNotes').value   = '';
+    document.getElementById('f-projStage').value   = 'pitch';
+    setTimeout(()=>document.getElementById('f-projName').focus(), 60);
+  }
+  document.getElementById('modalBackdrop').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalBackdrop').classList.remove('open');
+}
+function backdropClick(e) {
+  if (e.target === document.getElementById('modalBackdrop')) closeModal();
+}
+
+async function saveModal() {
+  const btn = document.getElementById('btnSave');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    if (modalMode === 'client') {
+      const name = document.getElementById('f-clientName').value.trim();
+      if (!name) { document.getElementById('f-clientName').focus(); btn.disabled=false; btn.textContent='Save'; return; }
+
+      const [newClient] = await sb("POST", "clients", [{
+        name,
+        sector: document.getElementById('f-clientSector').value.trim() || null,
+        status: document.getElementById('f-clientStatus').value,
+        src:    'manual',
+        notes:  document.getElementById('f-clientNotes').value.trim() || null
+      }]);
+      CLIENTS.push(newClient);
+      CLIENTS.sort((a,b)=>a.name.localeCompare(b.name));
+      openClients.add(newClient.id);
+      toast(`${name} added ✓`);
+
+    } else {
+      const name = document.getElementById('f-projName').value.trim();
+      if (!name) { document.getElementById('f-projName').focus(); btn.disabled=false; btn.textContent='Save'; return; }
+
+      const clientId = document.getElementById('f-projClient').value;
+      const [newProj] = await sb("POST", "projects", [{
+        client_id: clientId,
+        name,
+        handler:  document.getElementById('f-projHandler').value.trim() || null,
+        stage:    document.getElementById('f-projStage').value,
+        budget:   parseInt(document.getElementById('f-projBudget').value)||0,
+        spent:    0,
+        note:     document.getElementById('f-projNotes').value.trim() || null,
+        src:      'manual'
+      }]);
+      PROJECTS.push(newProj);
+      openClients.add(clientId);
+      toast(`Project added ✓`);
+    }
+
+    closeModal();
+    renderAll();
+  } catch(e) {
+    toastError("Save failed — " + e.message.slice(0,60));
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
+/* ── KEYBOARD ── */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+  if ((e.key === 'Enter') && (e.metaKey || e.ctrlKey) && document.getElementById('modalBackdrop').classList.contains('open')) saveModal();
+});
+
+/* ── GO ── */
+init();
+</script>
+</body>
+</html>
