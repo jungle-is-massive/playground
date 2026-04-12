@@ -414,9 +414,7 @@ async function loadData() {
     sb("GET", "clients", null, "?select=*&order=name.asc"),
     sb("GET", "projects", null, "?select=*&order=created_at.asc")
   ]);
-  if (openClients.size === 0) {
-    CLIENTS.forEach(c => openClients.add(c.id));
-  }
+  // Clients start collapsed on load
 }
 
 /* ── INIT ── */
