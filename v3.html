@@ -169,6 +169,42 @@
   .spinner { width: 20px; height: 20px; border: 2px solid var(--grey-light); border-top-color: var(--black); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; margin-bottom: 12px; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  /* INLINE NEW CLIENT */
+  .inline-client-form {
+    display: none;
+    margin-top: 10px;
+    padding: 12px 14px;
+    background: var(--cream);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    grid-column: span 2;
+  }
+  .inline-client-form.open { display: block; }
+  .inline-client-form .icf-label {
+    font-size: 10px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.6px; color: var(--grey); margin-bottom: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .inline-client-form .icf-cancel {
+    font-size: 11px; font-weight: 400; text-transform: none; letter-spacing: 0;
+    color: var(--grey); background: none; border: none; cursor: pointer;
+    padding: 0; font-family: inherit;
+  }
+  .inline-client-form .icf-cancel:hover { color: var(--black); }
+  .inline-client-form .icf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .inline-client-form input, .inline-client-form select {
+    font-size: 12px; padding: 7px 10px;
+  }
+  .inline-client-form .icf-confirm {
+    margin-top: 8px; width: 100%;
+    font-family: inherit; font-size: 12px; font-weight: 500;
+    color: var(--black); background: var(--green);
+    border: none; border-radius: 7px; padding: 7px 0;
+    cursor: pointer; transition: opacity 0.12s;
+  }
+  .inline-client-form .icf-confirm:hover { opacity: 0.85; }
+  .inline-client-form .icf-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
+
   /* EMPTY */
   .no-clients { text-align: center; padding: 5rem 0; color: var(--grey); }
 
@@ -253,7 +289,25 @@
     <div id="formProject" style="display:none">
       <div class="form-grid">
         <div class="field span2"><label>Project name</label><input type="text" id="f-projName" placeholder="e.g. Always-On Social Q3"></div>
-        <div class="field"><label>Client</label><select id="f-projClient"></select></div>
+        <div class="field span2">
+          <label>Client</label>
+          <select id="f-projClient" onchange="handleClientSelect(this)"></select>
+          <div class="inline-client-form" id="inlineClientForm">
+            <div class="icf-label">
+              New client details
+              <button class="icf-cancel" type="button" onclick="cancelInlineClient()">✕ Cancel</button>
+            </div>
+            <div class="icf-row">
+              <input type="text" id="icf-name"   placeholder="Client name *">
+              <input type="text" id="icf-sector" placeholder="Sector (optional)">
+            </div>
+            <select id="icf-status" style="width:100%;margin-top:8px">
+              <option value="prospect">Prospect</option>
+              <option value="active">Active client</option>
+            </select>
+            <button class="icf-confirm" id="icfConfirmBtn" type="button" onclick="confirmInlineClient()">Create client and continue →</button>
+          </div>
+        </div>
         <div class="field"><label>Handler / lead</label><input type="text" id="f-projHandler" placeholder="e.g. Ro Mitchell"></div>
         <div class="field"><label>Stage</label>
           <select id="f-projStage">
@@ -627,7 +681,13 @@ function openModal(mode, clientId) {
     formC.style.display = 'none';
     formP.style.display = 'block';
     const sel = document.getElementById('f-projClient');
-    sel.innerHTML = CLIENTS.map(c=>`<option value="${c.id}" ${c.id===clientId?'selected':''}>${c.name}</option>`).join('');
+    sel.innerHTML =
+      CLIENTS.map(c=>`<option value="${c.id}" ${c.id===clientId?'selected':''}>${c.name}</option>`).join('') +
+      `<option value="__new__" style="color:var(--grey)">＋ Add new client…</option>`;
+    document.getElementById('inlineClientForm').classList.remove('open');
+    document.getElementById('icf-name').value   = '';
+    document.getElementById('icf-sector').value = '';
+    document.getElementById('icf-status').value = 'prospect';
     document.getElementById('f-projName').value    = '';
     document.getElementById('f-projHandler').value = '';
     document.getElementById('f-projBudget').value  = '';
@@ -672,6 +732,10 @@ async function saveModal() {
       if (!name) { document.getElementById('f-projName').focus(); btn.disabled=false; btn.textContent='Save'; return; }
 
       const clientId = document.getElementById('f-projClient').value;
+      if (!clientId || clientId === '__new__') {
+        toastError("Please create or select a client first");
+        btn.disabled=false; btn.textContent='Save'; return;
+      }
       const [newProj] = await sb("POST", "projects", [{
         client_id: clientId,
         name,
@@ -696,7 +760,70 @@ async function saveModal() {
   }
 }
 
-/* ── KEYBOARD ── */
+/* ── INLINE NEW CLIENT (inside Add Project modal) ── */
+function handleClientSelect(sel) {
+  const form = document.getElementById('inlineClientForm');
+  if (sel.value === '__new__') {
+    form.classList.add('open');
+    setTimeout(() => document.getElementById('icf-name').focus(), 50);
+  } else {
+    form.classList.remove('open');
+  }
+}
+
+function cancelInlineClient() {
+  const sel = document.getElementById('f-projClient');
+  // Revert to first real client if available
+  const firstReal = CLIENTS[0];
+  if (firstReal) sel.value = firstReal.id;
+  document.getElementById('inlineClientForm').classList.remove('open');
+}
+
+async function confirmInlineClient() {
+  const name = document.getElementById('icf-name').value.trim();
+  if (!name) { document.getElementById('icf-name').focus(); return; }
+
+  const btn = document.getElementById('icfConfirmBtn');
+  btn.disabled = true;
+  btn.textContent = 'Creating…';
+
+  try {
+    const [newClient] = await sb("POST", "clients", [{
+      name,
+      sector: document.getElementById('icf-sector').value.trim() || null,
+      status: document.getElementById('icf-status').value,
+      src:    'manual'
+    }]);
+
+    // Add to local state
+    CLIENTS.push(newClient);
+    CLIENTS.sort((a,b) => a.name.localeCompare(b.name));
+    openClients.add(newClient.id);
+
+    // Rebuild the dropdown and select the new client
+    const sel = document.getElementById('f-projClient');
+    sel.innerHTML =
+      CLIENTS.map(c => `<option value="${c.id}" ${c.id===newClient.id?'selected':''}>${c.name}</option>`).join('') +
+      `<option value="__new__" style="color:var(--grey)">＋ Add new client…</option>`;
+
+    // Close inline form
+    document.getElementById('inlineClientForm').classList.remove('open');
+    document.getElementById('icf-name').value   = '';
+    document.getElementById('icf-sector').value = '';
+
+    toast(`${name} created ✓`);
+
+    // Refocus project name field
+    document.getElementById('f-projName').focus();
+  } catch(e) {
+    toastError("Could not create client — " + e.message.slice(0,50));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Create client and continue →';
+  }
+}
+
+
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
   if ((e.key === 'Enter') && (e.metaKey || e.ctrlKey) && document.getElementById('modalBackdrop').classList.contains('open')) saveModal();
