@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jungle — Live Client View</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #F5F2EB; --black: #111110; --green: #8BFF57;
+    --green-bg: rgba(139,255,87,0.1); --green-border: rgba(139,255,87,0.25);
+    --grey: #7A7972; --grey-light: #E8E5DC; --grey-mid: #CFCCC3;
+    --border: rgba(17,17,16,0.09); --border-strong: rgba(17,17,16,0.2);
+    --red: #FF4D4D; --amber: #F5A623;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--cream); color: var(--black); font-family: 'DM Sans', system-ui, sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; }
+
+  nav { position: sticky; top: 0; z-index: 200; background: var(--black); display: flex; align-items: center; justify-content: space-between; padding: 0 2rem; height: 52px; }
+  .nav-logo { font-size: 17px; font-weight: 500; letter-spacing: -0.5px; color: #fff; }
+  .nav-logo span { color: var(--green); }
+  .nav-right { display: flex; align-items: center; gap: 10px; }
+  .live-badge { display: flex; align-items: center; gap: 6px; font-size: 11px; color: rgba(255,255,255,0.45); }
+  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+  .last-sync { font-size: 11px; color: rgba(255,255,255,0.3); }
+  .btn-refresh { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--black); background: var(--green); border: none; border-radius: 20px; padding: 6px 14px; cursor: pointer; transition: opacity 0.15s; }
+  .btn-refresh:hover { opacity: 0.85; }
+  .btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 2rem 4rem; }
+
+  .page-header { padding: 2.5rem 0 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .page-header h1 { font-size: 28px; font-weight: 300; letter-spacing: -0.8px; line-height: 1.1; }
+  .page-header h1 strong { font-weight: 500; }
+  .page-sub { font-size: 13px; color: var(--grey); margin-top: 4px; }
+
+  .summary-strip { display: flex; background: var(--black); border-radius: 10px; overflow: hidden; margin-bottom: 2rem; }
+  .summary-item { flex: 1; padding: 16px 20px; border-right: 1px solid rgba(255,255,255,0.06); }
+  .summary-item:last-child { border-right: none; }
+  .summary-label { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.7px; color: rgba(255,255,255,0.35); margin-bottom: 5px; }
+  .summary-val { font-size: 22px; font-weight: 300; letter-spacing: -0.8px; color: #fff; }
+  .summary-val strong { font-weight: 500; }
+  .summary-val .accent { color: var(--green); }
+  .summary-sub { font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px; }
+
+  .controls { display: flex; align-items: center; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .filter-pill { font-size: 12px; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border-strong); background: transparent; color: var(--grey); cursor: pointer; transition: all 0.12s; font-family: inherit; }
+  .filter-pill:hover { border-color: var(--black); color: var(--black); }
+  .filter-pill.active { background: var(--black); color: var(--green); border-color: var(--black); }
+  .search-wrap { margin-left: auto; position: relative; }
+  .search-wrap svg { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); opacity: 0.3; pointer-events: none; }
+  .search { font-family: inherit; font-size: 12px; padding: 6px 12px 6px 32px; border: 1px solid var(--border-strong); border-radius: 20px; background: transparent; color: var(--black); width: 210px; outline: none; transition: border-color 0.12s; }
+  .search:focus { border-color: var(--black); }
+  .search::placeholder { color: var(--grey); }
+
+  .client-block { margin-bottom: 10px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; transition: border-color 0.12s; }
+  .client-block:hover { border-color: var(--border-strong); }
+  .client-header { display: flex; align-items: center; padding: 14px 18px; cursor: pointer; background: #fff; border-bottom: 1px solid transparent; transition: background 0.12s; gap: 12px; user-select: none; }
+  .client-block.open .client-header { border-bottom-color: var(--border); background: #fafaf8; }
+  .client-chevron { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--grey-mid); transition: transform 0.2s; }
+  .client-block.open .client-chevron { transform: rotate(90deg); }
+  .client-name { font-size: 15px; font-weight: 500; letter-spacing: -0.3px; flex: 1; min-width: 0; }
+  .client-meta { display: flex; gap: 18px; align-items: center; margin-left: auto; flex-shrink: 0; }
+  .client-stat { font-size: 11px; color: var(--grey); white-space: nowrap; }
+  .client-stat strong { font-size: 13px; font-weight: 500; color: var(--black); }
+  .sector-tag { font-size: 10px; color: var(--grey); background: var(--grey-light); border-radius: 4px; padding: 2px 8px; white-space: nowrap; }
+
+  .jobs-table { display: none; }
+  .client-block.open .jobs-table { display: block; }
+
+  .job-row-header { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.6px; color: var(--grey); padding: 8px 18px; display: grid; grid-template-columns: 1fr 140px 90px 110px 80px; gap: 10px; background: #fafaf8; border-bottom: 1px solid var(--border); }
+  .job-row { display: grid; grid-template-columns: 1fr 140px 90px 110px 80px; align-items: center; gap: 10px; padding: 11px 18px; border-bottom: 1px solid var(--border); transition: background 0.1s; }
+  .job-row:last-child { border-bottom: none; }
+  .job-row:hover { background: #fafaf8; }
+
+  .job-name { font-size: 13px; font-weight: 500; color: var(--black); line-height: 1.25; }
+  .job-num  { font-size: 10px; color: var(--grey); margin-top: 1px; }
+  .job-handler { font-size: 12px; color: var(--grey); }
+  .job-date { font-size: 11px; color: var(--grey); }
+
+  .status-pill { font-size: 10px; font-weight: 500; padding: 3px 9px; border-radius: 20px; display: inline-block; white-space: nowrap; }
+  .st-live    { background: #D8FFB8; color: #2A6000; }
+  .st-quote   { background: #FFF0D0; color: #8A4500; }
+  .st-onhold  { background: #FFE0E0; color: #8A0000; }
+
+  .therm-wrap { display: flex; align-items: center; gap: 6px; }
+  .therm-bar  { flex: 1; height: 4px; background: var(--grey-light); border-radius: 2px; overflow: hidden; min-width: 40px; }
+  .therm-fill { height: 100%; border-radius: 2px; background: var(--green); }
+  .therm-fill.warn   { background: var(--amber); }
+  .therm-fill.danger { background: var(--red); }
+  .therm-pct  { font-size: 10px; color: var(--grey); white-space: nowrap; min-width: 28px; text-align: right; }
+
+  .loading { text-align: center; padding: 5rem 0; color: var(--grey); }
+  .spinner { width: 20px; height: 20px; border: 2px solid var(--grey-light); border-top-color: var(--black); border-radius: 50%; animation: spin 0.7s linear infinite; display: inline-block; margin-bottom: 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .error-msg { text-align: center; padding: 4rem 0; color: var(--red); }
+  .no-results { text-align: center; padding: 4rem 0; color: var(--grey); font-size: 14px; }
+
+  .proxy-note { margin-top: 2rem; padding: 12px 16px; background: var(--black); border-radius: 8px; font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.6; }
+  .proxy-note code { color: var(--green); font-family: monospace; font-size: 10px; }
+
+  @media (max-width: 780px) {
+    .job-row, .job-row-header { grid-template-columns: 1fr auto; }
+    .job-row > *:nth-child(n+3), .job-row-header > *:nth-child(n+3) { display: none; }
+    .client-meta { display: none; }
+    .summary-strip { flex-wrap: wrap; }
+    .summary-item { min-width: 50%; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">jungle<span>.</span>clients</div>
+  <div class="nav-right">
+    <div class="live-badge"><div class="live-dot"></div>Live · Synergist</div>
+    <span class="last-sync" id="lastSync"></span>
+    <button class="btn-refresh" id="btnRefresh" onclick="loadData()">↻ Refresh</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="page-header">
+    <h1>Live <strong>client jobs.</strong></h1>
+    <p class="page-sub">All active work pulled directly from Synergist — live, read-only.</p>
+  </div>
+
+  <div class="summary-strip" id="summaryStrip">
+    <div class="summary-item"><div class="summary-label">Loading</div><div class="summary-val">—</div></div>
+  </div>
+
+  <div class="controls">
+    <button class="filter-pill active" onclick="setFilter('all',this)">All</button>
+    <button class="filter-pill" onclick="setFilter('Live',this)">Live</button>
+    <button class="filter-pill" onclick="setFilter('Quote',this)">Quotes</button>
+    <button class="filter-pill" onclick="setFilter('On-hold',this)">On hold</button>
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <circle cx="6" cy="6" r="4.5" stroke="#111110" stroke-width="1.2"/>
+        <line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="#111110" stroke-width="1.2" stroke-linecap="round"/>
+      </svg>
+      <input class="search" type="text" id="searchInput" placeholder="Search clients or jobs…" oninput="renderClients()">
+    </div>
+  </div>
+
+  <div id="clientList"><div class="loading"><div class="spinner"></div><br>Connecting to Synergist…</div></div>
+
+  <div class="proxy-note" id="proxyNote" style="display:none">
+    ⚠ This page calls Synergist directly from the browser using your credentials. When you're ready to share this more widely,
+    we should route requests through a proxy (e.g. a Make.com scenario or a small Supabase Edge Function) so credentials
+    aren't exposed in the page source. For now, internal use only.
+  </div>
+</div>
+
+<script>
+/* ── CONFIG ── */
+const SERVER = "https://junglecreations.synergist.cloud";
+const USER   = "Coris.leachman";
+const PASS   = "Jungle@123";
+
+/* ── CLIENTS/JOBS TO EXCLUDE (internal, media platform accounts) ── */
+const EXCLUDE = new Set([
+  "AGENCY INTERNAL - Non-Billable",
+  "MEDIA INTERNAL - Non-Bilable",
+  "Jungle Creations Ltd",
+  "Creator - Media",
+  "Auto created internal organisation for external bookings",
+]);
+const EXCLUDE_PATTERNS = [" - Media", "Media Cross-Platform", "Website - Media"];
+
+function shouldExclude(clientName) {
+  if (EXCLUDE.has(clientName)) return true;
+  return EXCLUDE_PATTERNS.some(p => clientName.includes(p));
+}
+
+/* ── STATE ── */
+let BY_CLIENT = {};   // { clientName: [jobs] }
+let openClients = new Set();
+let currentFilter = 'all';
+let totalJobs = 0;
+
+/* ── API ── */
+async function synergistGet(endpoint, params) {
+  const base = `${SERVER}/jsonapi/${endpoint}`;
+  const qp = new URLSearchParams({
+    user: USER, password: PASS, version: "4", company: "1", ...params
+  });
+  const resp = await fetch(`${base}?${qp}`);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+
+async function fetchAllJobs() {
+  let all = [], page = 1, total = null;
+  while (true) {
+    const data = await synergistGet("jobs.json", {
+      modelstructure: "jobslist", style: "modeldata", rows: "100", page: String(page)
+    });
+    all = all.concat(data.data);
+    if (total === null) total = data.totalrows;
+    if (all.length >= total) break;
+    page++;
+  }
+  return all;
+}
+
+/* ── LOAD ── */
+async function loadData() {
+  const btn = document.getElementById('btnRefresh');
+  btn.disabled = true;
+  btn.textContent = '↻ Loading…';
+  document.getElementById('clientList').innerHTML =
+    '<div class="loading"><div class="spinner"></div><br>Fetching from Synergist…</div>';
+
+  try {
+    const allJobs = await fetchAllJobs();
+
+    // Filter: not completed, not internal/media
+    const active = allJobs.filter(j =>
+      !j.jobCompleted &&
+      !shouldExclude(j.jobClientName || "")
+    );
+
+    // Group by client
+    BY_CLIENT = {};
+    for (const j of active) {
+      const c = j.jobClientName || "Unknown Client";
+      if (!BY_CLIENT[c]) BY_CLIENT[c] = [];
+      BY_CLIENT[c].push(j);
+    }
+
+    // Sort clients alphabetically
+    BY_CLIENT = Object.fromEntries(
+      Object.entries(BY_CLIENT).sort(([a],[b]) => a.localeCompare(b))
+    );
+
+    totalJobs = active.length;
+
+    // Default: all collapsed
+    openClients = new Set();
+
+    renderSummary();
+    renderClients();
+
+    const now = new Date();
+    document.getElementById('lastSync').textContent =
+      `Synced ${now.toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})}`;
+
+    document.getElementById('proxyNote').style.display = 'block';
+
+  } catch(e) {
+    document.getElementById('clientList').innerHTML =
+      `<div class="error-msg">Could not connect to Synergist.<br><small>${e.message}</small></div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '↻ Refresh';
+  }
+}
+
+/* ── HELPERS ── */
+function stageClass(s) {
+  return {Live:'st-live', Quote:'st-quote', 'On-hold':'st-onhold'}[s] || 'st-quote';
+}
+
+function thermHtml(thermStr) {
+  if (!thermStr) return '<span style="font-size:11px;color:var(--grey)">—</span>';
+  const pct = parseInt(thermStr);
+  if (isNaN(pct)) return '<span style="font-size:11px;color:var(--grey)">—</span>';
+  const capped = Math.min(pct, 100);
+  const cls = pct >= 100 ? 'danger' : pct >= 85 ? 'warn' : '';
+  return `<div class="therm-wrap">
+    <div class="therm-bar"><div class="therm-fill ${cls}" style="width:${capped}%"></div></div>
+    <span class="therm-pct" style="${pct>=100?'color:var(--red)':pct>=85?'color:var(--amber)':''}">${pct}%</span>
+  </div>`;
+}
+
+function fmtDate(d) {
+  if (!d || d === '0000-00-00') return '—';
+  return new Date(d).toLocaleDateString('en-GB', {day:'numeric',month:'short',year:'2-digit'});
+}
+
+function matchesFilter(job) {
+  if (currentFilter === 'all') return true;
+  return job.jobStatusDescription === currentFilter;
+}
+
+function matchesSearch(clientName, jobs) {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  if (!q) return true;
+  if (clientName.toLowerCase().includes(q)) return true;
+  return jobs.some(j => j.jobDescription1stLine.toLowerCase().includes(q) ||
+    (j.jobHandlerFullName||'').toLowerCase().includes(q) ||
+    (j.jobNumber||'').toLowerCase().includes(q));
+}
+
+/* ── SUMMARY ── */
+function renderSummary() {
+  const clients = Object.keys(BY_CLIENT).length;
+  const live    = Object.values(BY_CLIENT).flat().filter(j=>j.jobStatusDescription==='Live').length;
+  const quotes  = Object.values(BY_CLIENT).flat().filter(j=>j.jobStatusDescription==='Quote').length;
+  const overBudget = Object.values(BY_CLIENT).flat()
+    .filter(j=>j.jobThermValue && parseInt(j.jobThermProgress)>=100).length;
+
+  document.getElementById('summaryStrip').innerHTML = `
+    <div class="summary-item">
+      <div class="summary-label">Active clients</div>
+      <div class="summary-val"><strong>${clients}</strong></div>
+      <div class="summary-sub">with open jobs</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Total jobs</div>
+      <div class="summary-val"><strong>${totalJobs}</strong></div>
+      <div class="summary-sub">excluding internal</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Live</div>
+      <div class="summary-val"><strong class="accent">${live}</strong></div>
+      <div class="summary-sub">in delivery</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Quotes</div>
+      <div class="summary-val"><strong>${quotes}</strong></div>
+      <div class="summary-sub">pending</div>
+    </div>
+    <div class="summary-item">
+      <div class="summary-label">Over budget</div>
+      <div class="summary-val"><strong style="${overBudget>0?'color:var(--red)':''}">${overBudget}</strong></div>
+      <div class="summary-sub">jobs flagged</div>
+    </div>
+  `;
+}
+
+/* ── RENDER ── */
+function renderClients() {
+  const list = document.getElementById('clientList');
+
+  const visible = Object.entries(BY_CLIENT).filter(([name, jobs]) => {
+    const filtered = jobs.filter(matchesFilter);
+    if (currentFilter !== 'all' && filtered.length === 0) return false;
+    return matchesSearch(name, filtered.length ? filtered : jobs);
+  });
+
+  if (!visible.length) {
+    list.innerHTML = '<div class="no-results">No clients match your filter.</div>';
+    return;
+  }
+
+  list.innerHTML = visible.map(([clientName, allJobs]) => {
+    const visJobs = currentFilter === 'all' ? allJobs : allJobs.filter(matchesFilter);
+    const liveN   = allJobs.filter(j=>j.jobStatusDescription==='Live').length;
+    const quoteN  = allJobs.filter(j=>j.jobStatusDescription==='Quote').length;
+    const sector  = allJobs.find(j=>j.jobMarketSector)?.jobMarketSector || '';
+    const isOpen  = openClients.has(clientName);
+
+    return `
+    <div class="client-block ${isOpen?'open':''}" id="cb-${btoa(clientName).replace(/[^a-zA-Z0-9]/g,'')}">
+      <div class="client-header" onclick="toggleClient('${clientName.replace(/'/g,"\\'")}')">
+        <div class="client-chevron">
+          <svg width="8" height="12" viewBox="0 0 8 12" fill="none"><path d="M1.5 1.5L6.5 6L1.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="client-name">${clientName}</div>
+        ${sector ? `<span class="sector-tag">${sector}</span>` : ''}
+        <div class="client-meta">
+          <div class="client-stat"><strong>${allJobs.length}</strong> job${allJobs.length!==1?'s':''}</div>
+          ${liveN  ? `<div class="client-stat"><strong>${liveN}</strong> live</div>` : ''}
+          ${quoteN ? `<div class="client-stat"><strong>${quoteN}</strong> quote${quoteN!==1?'s':''}</div>` : ''}
+        </div>
+      </div>
+      <div class="jobs-table">
+        <div class="job-row-header">
+          <span>Job</span><span>Handler</span><span>Status</span><span>Budget used</span><span>Due</span>
+        </div>
+        ${visJobs.map(j => `
+        <div class="job-row">
+          <div>
+            <div class="job-name">${j.jobDescription1stLine}</div>
+            <div class="job-num">${j.jobNumber}</div>
+          </div>
+          <div class="job-handler">${j.jobHandlerFullName || '—'}</div>
+          <div><span class="status-pill ${stageClass(j.jobStatusDescription)}">${j.jobStatusDescription}</span></div>
+          <div>${thermHtml(j.jobThermProgress)}</div>
+          <div class="job-date">${fmtDate(j.jobCustomField18)}</div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleClient(name) {
+  openClients.has(name) ? openClients.delete(name) : openClients.add(name);
+  renderClients();
+}
+
+function setFilter(f, el) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderClients();
+}
+
+/* ── GO ── */
+loadData();
+</script>
+</body>
+</html>
