@@ -321,19 +321,17 @@ function renderClients() {
     return;
   }
 
-  list.innerHTML = visible.map(([clientName, allJobs]) => {
+  list.innerHTML = visible.map(([clientName, allJobs], idx) => {
     const visJobs = currentFilter === 'all' ? allJobs : allJobs.filter(matchesFilter);
     const liveN   = allJobs.filter(j=>j.jobStatusDescription==='Live').length;
     const quoteN  = allJobs.filter(j=>j.jobStatusDescription==='Quote').length;
     const sector  = allJobs.map(j=>j.jobMarketSector).find(s=>s) || '';
     const isOpen  = openClients.has(clientName);
-    const id      = safeId(clientName);
-    // Escape client name for use in onclick attribute
-    const escapedName = clientName.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    const id = 'cb-' + idx;
 
     return `
     <div class="client-block ${isOpen?'open':''}" id="${id}">
-      <div class="client-header" onclick="toggleClient('${escapedName}')">
+      <div class="client-header" data-client="${idx}">
         <div class="client-chevron">
           <svg width="8" height="12" viewBox="0 0 8 12" fill="none"><path d="M1.5 1.5L6.5 6L1.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
@@ -365,11 +363,26 @@ function renderClients() {
   }).join('');
 }
 
-function toggleClient(name) {
-  openClients.has(name) ? openClients.delete(name) : openClients.add(name);
-  // Re-render just the affected block
-  renderClients();
-}
+// Use event delegation — no inline onclick, works with any client name
+document.addEventListener('click', function(e) {
+  const header = e.target.closest('.client-header');
+  if (!header) return;
+  const idx = header.getAttribute('data-client');
+  if (idx === null) return;
+  const block = header.closest('.client-block');
+  // Find which client name this index refers to
+  const visible = Object.entries(BY_CLIENT).filter(([name, jobs]) => {
+    const filtered = jobs.filter(matchesFilter);
+    if (currentFilter !== 'all' && filtered.length === 0) return false;
+    return matchesSearch(name, filtered.length ? filtered : jobs);
+  });
+  const entry = visible[parseInt(idx)];
+  if (!entry) return;
+  const clientName = entry[0];
+  openClients.has(clientName) ? openClients.delete(clientName) : openClients.add(clientName);
+  block.classList.toggle('open', openClients.has(clientName));
+  // Just toggle the class — no full re-render needed
+});
 
 function setFilter(f, el) {
   currentFilter = f;
