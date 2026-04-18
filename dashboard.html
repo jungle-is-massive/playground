@@ -136,8 +136,8 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
 .jobs-list{display:none}
 .client-block.open .jobs-list{display:block}
 
-.jobs-list-header{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--grey);padding:8px 18px;display:grid;grid-template-columns:1fr 130px 110px 110px 80px;gap:10px;background:#fafaf8;border-bottom:1px solid var(--border)}
-.job-list-row{display:grid;grid-template-columns:1fr 130px 110px 110px 80px;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.jobs-list-header{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--grey);padding:8px 18px;display:grid;grid-template-columns:1fr 160px 90px 110px 80px;gap:10px;background:#fafaf8;border-bottom:1px solid var(--border)}
+.job-list-row{display:grid;grid-template-columns:1fr 160px 90px 110px 80px;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
 .job-list-row:last-child{border-bottom:none}
 .job-list-row:hover{background:#f5f5f2}
 .job-list-row.expanded{background:#f5f5f2}
@@ -411,23 +411,26 @@ function setPipeFilter(f,el){
 
 // ── CLIENTS ──
 function renderClientMetrics(){
-  const total=LIVE_JOBS.length;
-  const retainers=LIVE_JOBS.filter(j=>termType(j)==='Retainer').length;
-  const campaigns=LIVE_JOBS.filter(j=>termType(j)==='Campaign').length;
+  const allClientJobs=[...LIVE_JOBS,...QUOTE_JOBS].filter(j=>!isInternal(j.jobClientName||''));
+  const live=LIVE_JOBS.length;
+  const quotes=QUOTE_JOBS.length;
+  const clients=new Set(allClientJobs.map(j=>j.jobClientName)).size;
   const over=LIVE_JOBS.filter(j=>parseInt(j.jobThermProgress)>=100).length;
   const atRisk=LIVE_JOBS.filter(j=>{const p=parseInt(j.jobThermProgress);return p>=85&&p<100;}).length;
 
   document.getElementById('client-metrics').innerHTML=`
-    <div class="metric"><div class="metric-label">Live jobs</div><div class="metric-val"><strong>${total}</strong></div><div class="metric-sub">in delivery</div></div>
-    <div class="metric"><div class="metric-label">Retainers</div><div class="metric-val"><strong class="g">${retainers}</strong></div><div class="metric-sub">ongoing</div></div>
-    <div class="metric"><div class="metric-label">Campaigns</div><div class="metric-val"><strong>${campaigns}</strong></div><div class="metric-sub">project work</div></div>
+    <div class="metric"><div class="metric-label">Clients</div><div class="metric-val"><strong>${clients}</strong></div><div class="metric-sub">with active jobs</div></div>
+    <div class="metric"><div class="metric-label">Live jobs</div><div class="metric-val"><strong class="g">${live}</strong></div><div class="metric-sub">in delivery</div></div>
+    <div class="metric"><div class="metric-label">Quotes</div><div class="metric-val"><strong>${quotes}</strong></div><div class="metric-sub">pending sign-off</div></div>
     <div class="metric"><div class="metric-label">Over budget</div><div class="metric-val"><strong class="${over>0?'r':'g'}">${over}</strong></div><div class="metric-sub">${atRisk} approaching limit</div></div>`;
 }
 
 function clientFiltered(){
   const q=(document.getElementById('clientSearch').value||'').toLowerCase();
   const byClient={};
-  LIVE_JOBS.forEach(j=>{
+  // Include both live and quote jobs per client for full picture
+  const ALL_CLIENT_JOBS = [...LIVE_JOBS, ...QUOTE_JOBS];
+  ALL_CLIENT_JOBS.forEach(j=>{
     const tt=termType(j);
     if(clientFilter!=='all'&&tt!==clientFilter) return;
     if(q&&!(j.jobClientName||'').toLowerCase().includes(q)&&!(j.jobDescription1stLine||'').toLowerCase().includes(q)) return;
@@ -435,6 +438,11 @@ function clientFiltered(){
     if(!byClient[c]) byClient[c]=[];
     byClient[c].push(j);
   });
+  // Sort jobs within each client: Live first, then Quote
+  Object.values(byClient).forEach(jobs=>jobs.sort((a,b)=>{
+    const order={Live:0,Quote:1,'On-hold':2};
+    return (order[a.jobStatusDescription]??9)-(order[b.jobStatusDescription]??9);
+  }));
   return Object.entries(byClient).sort(([a],[b])=>a.localeCompare(b));
 }
 
@@ -456,12 +464,13 @@ function renderClients(){
         <div class="ch-name">${esc(clientName)}</div>
         <div class="ch-meta">
           <div class="ch-stat"><strong>${jobs.length}</strong> job${jobs.length!==1?'s':''}</div>
-          ${totalVal?`<div class="ch-stat"><strong>${fmt(totalVal)}</strong></div>`:''}
+          <div class="ch-stat"><strong>${jobs.filter(j=>j.jobStatusDescription==='Live').length}</strong> live</div>
+          ${jobs.filter(j=>j.jobStatusDescription==='Quote').length?`<div class="ch-stat"><strong>${jobs.filter(j=>j.jobStatusDescription==='Quote').length}</strong> quote${jobs.filter(j=>j.jobStatusDescription==='Quote').length!==1?'s':''}</div>`:''}
           ${over?`<div class="ch-stat" style="color:var(--red)"><strong>${over}</strong> over budget</div>`:''}
         </div>
       </div>
       <div class="jobs-list">
-        <div class="jobs-list-header"><span>Job</span><span>Handler</span><span style="text-align:right">Budget used</span><span style="text-align:right">Due</span><span>Type</span></div>
+        <div class="jobs-list-header"><span>Job</span><span>Handler</span><span>Status</span><span style="text-align:right">Budget used</span><span>Due</span></div>
         ${jobs.map(j=>{
           const jid=safeId(j.jobNumber);
           const isExpanded=openJobRows.has(j.jobNumber);
@@ -469,9 +478,9 @@ function renderClients(){
           <div class="job-list-row ${isExpanded?'expanded':''}" data-jrow="${esc(j.jobNumber)}">
             <div><div class="jlr-name">${esc(j.jobDescription1stLine)}</div><div class="jlr-num">${esc(j.jobNumber)}</div></div>
             <div class="jlr-handler">${esc(j.jobHandlerFullName||'—')}</div>
-            <div style="text-align:right">${thermHtml(j.jobThermProgress,true)}</div>
+            <div>${statusPill(j.jobStatusDescription)}</div>
+            <div>${thermHtml(j.jobThermProgress,true)}</div>
             ${dueBadge(j.jobDateDue)}
-            <div>${termType(j)!=='(blank)'?`<span class="status-pill st-live" style="font-size:9px">${esc(termType(j))}</span>`:'<span style="font-size:10px;color:var(--grey-mid)">Untagged</span>'}</div>
           </div>
           <div class="job-row-detail ${isExpanded?'open':''}" id="jrd-${jid}">
             <div class="loading-detail">Loading details…</div>
