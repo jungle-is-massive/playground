@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jungle — Synergist Data Gaps</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root{
+  --cream:#F5F2EB; --black:#111110; --green:#8BFF57;
+  --grey:#7A7972; --grey-light:#E8E5DC;
+  --border:rgba(17,17,16,0.09); --border-strong:rgba(17,17,16,0.2);
+  --red:#FF4D4D; --amber:#F5A623; --blue:#4A90D9;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--black);font-family:'DM Sans',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+nav{background:var(--black);display:flex;align-items:center;justify-content:space-between;padding:0 2rem;height:52px}
+.nav-logo{font-size:17px;font-weight:500;letter-spacing:-.5px;color:#fff}
+.nav-logo span{color:var(--green)}
+.back-link{font-size:12px;color:rgba(255,255,255,.5);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color .15s}
+.back-link:hover{color:#fff}
+
+.wrap{max-width:900px;margin:0 auto;padding:2.5rem 2rem 5rem}
+
+h1{font-size:28px;font-weight:300;letter-spacing:-.8px;margin-bottom:6px}
+h1 strong{font-weight:500}
+.page-sub{font-size:13px;color:var(--grey);margin-bottom:2.5rem;max-width:580px;line-height:1.6}
+
+/* HEALTH OVERVIEW */
+.health-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:2.5rem}
+.health-card{border-radius:10px;padding:18px 20px}
+.health-card.good{background:#1a2e10;border:1px solid rgba(139,255,87,.2)}
+.health-card.warn{background:#2e2010;border:1px solid rgba(245,166,35,.25)}
+.health-card.bad{background:#2e1010;border:1px solid rgba(255,77,77,.2)}
+.hc-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px}
+.health-card.good .hc-label{color:rgba(139,255,87,.6)}
+.health-card.warn .hc-label{color:rgba(245,166,35,.7)}
+.health-card.bad  .hc-label{color:rgba(255,100,100,.7)}
+.hc-val{font-size:28px;font-weight:300;letter-spacing:-.8px;color:#fff}
+.hc-val strong{font-weight:500}
+.hc-sub{font-size:11px;margin-top:4px}
+.health-card.good .hc-sub{color:rgba(139,255,87,.45)}
+.health-card.warn .hc-sub{color:rgba(245,166,35,.5)}
+.health-card.bad  .hc-sub{color:rgba(255,100,100,.5)}
+
+/* GAP SECTIONS */
+.section{margin-bottom:2.5rem}
+.section-header{display:flex;align-items:center;gap:12px;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:1px solid var(--border)}
+.section-title{font-size:17px;font-weight:500;letter-spacing:-.3px}
+.section-badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge-red{background:rgba(255,77,77,.12);color:var(--red);border:1px solid rgba(255,77,77,.2)}
+.badge-amber{background:rgba(245,166,35,.12);color:#8a5500;border:1px solid rgba(245,166,35,.25)}
+.badge-green{background:rgba(139,255,87,.12);color:#2a6000;border:1px solid rgba(139,255,87,.25)}
+.badge-grey{background:var(--grey-light);color:var(--grey)}
+.section-desc{font-size:13px;color:var(--grey);margin-bottom:1rem;line-height:1.6;max-width:640px}
+
+/* GAP TABLE */
+.gap-table{background:#fff;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1rem}
+.gap-table-header{display:grid;grid-template-columns:1fr 180px 120px;gap:12px;padding:8px 16px;font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--grey);background:#fafaf8;border-bottom:1px solid var(--border)}
+.gap-row{display:grid;grid-template-columns:1fr 180px 120px;gap:12px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:13px}
+.gap-row:last-child{border-bottom:none}
+.gap-field{font-weight:500}
+.gap-impact{font-size:12px;color:var(--grey)}
+.gap-count{font-size:13px;font-weight:500;text-align:right}
+.gap-count.bad{color:var(--red)}
+.gap-count.warn{color:var(--amber)}
+.gap-count.ok{color:#2a6000}
+
+/* WHAT TO DO */
+.action-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.25rem}
+.action-steps{display:flex;flex-direction:column;gap:10px;margin-top:1rem}
+.action-step{display:flex;gap:12px;align-items:flex-start}
+.step-num{width:22px;height:22px;border-radius:50%;background:var(--black);color:#fff;font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.step-text{font-size:13px;line-height:1.5}
+.step-text strong{font-weight:500}
+.step-text .field{font-family:monospace;font-size:12px;background:var(--grey-light);padding:1px 6px;border-radius:4px}
+
+/* PILLAR READINESS */
+.readiness-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:2.5rem}
+.readiness-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.25rem}
+.rc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem}
+.rc-title{font-size:14px;font-weight:500}
+.rc-status{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px}
+.rc-items{display:flex;flex-direction:column;gap:6px}
+.rc-item{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--grey)}
+.rc-item.ok{color:#2a6000}
+.rc-item.missing{color:var(--red)}
+.rc-item.partial{color:#8a5500}
+.rc-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.rc-item.ok .rc-dot{background:var(--green)}
+.rc-item.missing .rc-dot{background:var(--red)}
+.rc-item.partial .rc-dot{background:var(--amber)}
+
+@media(max-width:640px){
+  .health-strip{grid-template-columns:1fr}
+  .readiness-grid{grid-template-columns:1fr}
+  .gap-table-header,.gap-row{grid-template-columns:1fr auto}
+  .gap-row>*:nth-child(2){display:none}
+  .gap-table-header>*:nth-child(2){display:none}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">jungle<span>.</span>ops</div>
+  <a class="back-link" href="dashboard.html">← Back to dashboard</a>
+</nav>
+
+<div class="wrap">
+  <h1>Synergist <strong>data gaps.</strong></h1>
+  <p class="page-sub">This page shows what's missing in Synergist right now, why it matters for the dashboard, and exactly what needs to be filled in to unlock each pillar. Share with whoever manages Synergist at Jungle.</p>
+
+  <!-- HEALTH OVERVIEW -->
+  <div class="health-strip">
+    <div class="health-card good">
+      <div class="hc-label">Working well</div>
+      <div class="hc-val"><strong>42</strong></div>
+      <div class="hc-sub">live jobs with handler + dates</div>
+    </div>
+    <div class="health-card warn">
+      <div class="hc-label">Partially complete</div>
+      <div class="hc-val"><strong>21</strong></div>
+      <div class="hc-sub">live jobs missing term type or budget burn</div>
+    </div>
+    <div class="health-card bad">
+      <div class="hc-label">Needs attention</div>
+      <div class="hc-val"><strong>82</strong></div>
+      <div class="hc-sub">quote jobs have no revenue value set</div>
+    </div>
+  </div>
+
+  <!-- PILLAR READINESS -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Dashboard pillar readiness</div>
+    </div>
+    <div class="readiness-grid">
+
+      <div class="readiness-card">
+        <div class="rc-header">
+          <div class="rc-title">Pipeline (New Business)</div>
+          <span class="rc-status badge-amber">Partial</span>
+        </div>
+        <div class="rc-items">
+          <div class="rc-item ok"><div class="rc-dot"></div>Client name — all present</div>
+          <div class="rc-item ok"><div class="rc-dot"></div>Handler — all assigned</div>
+          <div class="rc-item ok"><div class="rc-dot"></div>Due dates — 72 of 82 set</div>
+          <div class="rc-item missing"><div class="rc-dot"></div>Revenue value — 0 of 82 set</div>
+          <div class="rc-item missing"><div class="rc-dot"></div>Term type — 46 of 82 blank</div>
+          <div class="rc-item partial"><div class="rc-dot"></div>Activities/next actions — present but inconsistent</div>
+        </div>
+      </div>
+
+      <div class="readiness-card">
+        <div class="rc-header">
+          <div class="rc-title">Existing Clients</div>
+          <span class="rc-status badge-amber">Partial</span>
+        </div>
+        <div class="rc-items">
+          <div class="rc-item ok"><div class="rc-dot"></div>Client name — all present</div>
+          <div class="rc-item ok"><div class="rc-dot"></div>Handler — all assigned</div>
+          <div class="rc-item ok"><div class="rc-dot"></div>Due dates — all set</div>
+          <div class="rc-item ok"><div class="rc-dot"></div>Budget burn (thermometer) — 30 of 42 set</div>
+          <div class="rc-item partial"><div class="rc-dot"></div>Quoted value — exists but requires extra API call</div>
+          <div class="rc-item missing"><div class="rc-dot"></div>Term type — 9 of 42 blank</div>
+        </div>
+      </div>
+
+      <div class="readiness-card">
+        <div class="rc-header">
+          <div class="rc-title">Production</div>
+          <span class="rc-status badge-red">Not ready</span>
+        </div>
+        <div class="rc-items">
+          <div class="rc-item ok"><div class="rc-dot"></div>Diary API exists in Synergist</div>
+          <div class="rc-item missing"><div class="rc-dot"></div>Diary bookings — need to verify data is populated</div>
+          <div class="rc-item missing"><div class="rc-dot"></div>Shoot vs edit vs delivery — no consistent tagging</div>
+          <div class="rc-item missing"><div class="rc-dot"></div>Resource/team calendar view — requires diary data</div>
+          <div class="rc-item missing"><div class="rc-dot"></div>Clash detection — only possible once diary is populated</div>
+        </div>
+      </div>
+
+      <div class="readiness-card">
+        <div class="rc-header">
+          <div class="rc-title">Focus (4-week view)</div>
+          <span class="rc-status badge-amber">Buildable now</span>
+        </div>
+        <div class="rc-items">
+          <div class="rc-item ok"><div class="rc-dot"></div>Due dates — available</div>
+          <div class="rc-item ok"><div class="rc-dot"></div>Budget burn — available for live jobs</div>
+          <div class="rc-item ok"><div class="rc-dot"></div>Handler — available</div>
+          <div class="rc-item partial"><div class="rc-dot"></div>Pipeline value — needs Revenue field populated</div>
+          <div class="rc-item partial"><div class="rc-dot"></div>High-risk flagging — needs term type for context</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- GAP: REVENUE VALUE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Revenue value on quote jobs</div>
+      <span class="section-badge badge-red">82 jobs affected</span>
+    </div>
+    <p class="section-desc">The <strong>Revenue</strong> field (labelled "Revenue" in Synergist, field code <code>jobCustomField6</code>) is empty on every single Quote job. This means the pipeline panel currently shows no £ values — the total pipeline value reads as zero. This is the single most important gap to fix.</p>
+
+    <div class="gap-table">
+      <div class="gap-table-header"><span>Example jobs missing value</span><span>Client</span><span>Impact</span></div>
+      <div class="gap-row"><div class="gap-field">Jockey Club</div><div class="gap-impact">The Jockey Club</div><div class="gap-count bad">No £</div></div>
+      <div class="gap-row"><div class="gap-field">Abbott Lyon YouTube</div><div class="gap-impact">Abbott Lyon</div><div class="gap-count bad">No £</div></div>
+      <div class="gap-row"><div class="gap-field">Kopparberg Crispy Apple Cider 2026</div><div class="gap-impact">The 7Stars UK Limited</div><div class="gap-count bad">No £</div></div>
+      <div class="gap-row"><div class="gap-field">Nandos 2026 (Client Confidential)</div><div class="gap-impact">ZenithOptimedia UK</div><div class="gap-count bad">No £</div></div>
+      <div class="gap-row"><div class="gap-field">Doritos - Pepsico - F1</div><div class="gap-impact">OMD UK Limited</div><div class="gap-count bad">No £</div></div>
+    </div>
+
+    <div class="action-card">
+      <strong>What to do in Synergist</strong>
+      <div class="action-steps">
+        <div class="action-step"><div class="step-num">1</div><div class="step-text">Open each Quote job in Synergist and find the field labelled <span class="field">Revenue</span> (in the custom fields section).</div></div>
+        <div class="action-step"><div class="step-num">2</div><div class="step-text">Enter the estimated or quoted £ value. This doesn't need to be exact — even a ballpark figure is enough to make the pipeline view useful.</div></div>
+        <div class="action-step"><div class="step-num">3</div><div class="step-text">Alternatively, if the <span class="field">Quoted Price</span> field on the job header is already filled in, the dashboard can pull from there instead — let us know and we'll switch the data source.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP: TERM TYPE -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Term type (Retainer vs Campaign)</div>
+      <span class="section-badge badge-amber">55 jobs affected</span>
+    </div>
+    <p class="section-desc">The <strong>Term Type</strong> field distinguishes retainer work from campaign/project work. 46 quote jobs and 9 live jobs have this blank. Without it, the filters in both dashboard tabs can't split work by type — everything shows as "Untagged".</p>
+
+    <div class="gap-table">
+      <div class="gap-table-header"><span>Example jobs missing term type</span><span>Client</span><span>Status</span></div>
+      <div class="gap-row"><div class="gap-field">Doritos - Pepsico - F1</div><div class="gap-impact">OMD UK Limited</div><div class="gap-count warn">Quote</div></div>
+      <div class="gap-row"><div class="gap-field">Nandos 2026</div><div class="gap-impact">ZenithOptimedia UK</div><div class="gap-count warn">Quote</div></div>
+      <div class="gap-row"><div class="gap-field">Al Fez</div><div class="gap-impact">The 7Stars UK Limited</div><div class="gap-count warn">Quote</div></div>
+      <div class="gap-row"><div class="gap-field">Love Holidays Performance</div><div class="gap-impact">WE LOVE HOLIDAYS LTD</div><div class="gap-count ok">Live</div></div>
+      <div class="gap-row"><div class="gap-field">Disney+ Paradise Season 2</div><div class="gap-impact">The Walt Disney Company Limited</div><div class="gap-count ok">Live</div></div>
+      <div class="gap-row"><div class="gap-field">Holie's - Granola Clusters</div><div class="gap-impact">Holie's UK Ltd</div><div class="gap-count ok">Live</div></div>
+    </div>
+
+    <div class="action-card">
+      <strong>What to do in Synergist</strong>
+      <div class="action-steps">
+        <div class="action-step"><div class="step-num">1</div><div class="step-text">Open each job and find the <span class="field">Term Type</span> field. The available options are: <strong>Retainer</strong> or <strong>Campaign</strong>.</div></div>
+        <div class="action-step"><div class="step-num">2</div><div class="step-text">Set "Retainer" for ongoing monthly/annual contracted work. Set "Campaign" for one-off project briefs.</div></div>
+        <div class="action-step"><div class="step-num">3</div><div class="step-text">Going forward, make Term Type a required field when creating new jobs to prevent this gap recurring.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP: BUDGET BURN -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Budget burn (thermometer) on live jobs</div>
+      <span class="section-badge badge-amber">12 jobs affected</span>
+    </div>
+    <p class="section-desc">12 live jobs show 0% or no thermometer value. This means the budget burn bar in the Existing Clients tab can't display for those jobs — we can't tell if they're on track, at risk, or over budget.</p>
+
+    <div class="gap-table">
+      <div class="gap-table-header"><span>Example jobs with no budget burn data</span><span>Client</span><span>Current %</span></div>
+      <div class="gap-row"><div class="gap-field">Disney Retainer 2025-2026 (Holding)</div><div class="gap-impact">The Walt Disney Company Ltd</div><div class="gap-count bad">0%</div></div>
+      <div class="gap-row"><div class="gap-field">Disney+ Paradise Season 2</div><div class="gap-impact">The Walt Disney Company Ltd</div><div class="gap-count bad">0%</div></div>
+      <div class="gap-row"><div class="gap-field">Gary Test</div><div class="gap-impact">Mitre Studios Ltd</div><div class="gap-count bad">0%</div></div>
+    </div>
+
+    <div class="action-card">
+      <strong>What to do in Synergist</strong>
+      <div class="action-steps">
+        <div class="action-step"><div class="step-num">1</div><div class="step-text">The thermometer value is driven by <strong>time logged vs estimated time</strong> on each job. Ensure estimates are set on each phase of the job.</div></div>
+        <div class="action-step"><div class="step-num">2</div><div class="step-text">Make sure team members are logging time against the correct job numbers so actuals accumulate.</div></div>
+        <div class="action-step"><div class="step-num">3</div><div class="step-text">"Holding" jobs (like Disney Retainer Holding) are likely placeholders — consider whether they should be shown in the dashboard or excluded.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAP: PRODUCTION -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-title">Production & diary data</div>
+      <span class="section-badge badge-red">Tab not yet buildable</span>
+    </div>
+    <p class="section-desc">The Production tab requires diary/calendar data from Synergist — specifically, resource bookings that show who is allocated to which shoot, edit, or delivery on which day. The Synergist Diary API exists, but we need to confirm the data is actually being entered and what it looks like for Jungle's production team.</p>
+
+    <div class="action-card">
+      <strong>Questions to answer before building</strong>
+      <div class="action-steps">
+        <div class="action-step"><div class="step-num">1</div><div class="step-text">Is the production team using Synergist's diary/calendar to log resource bookings? If yes, who? If no, where do they track shoots?</div></div>
+        <div class="action-step"><div class="step-num">2</div><div class="step-text">How are shoots tagged in Synergist — by job type, phase, charge code, or something else? We need a consistent way to filter "shoot days" vs "edit days" vs "delivery".</div></div>
+        <div class="action-step"><div class="step-num">3</div><div class="step-text">Which team members need to appear in the resource/calendar view? Is it just production, or does it include account handlers and new biz too?</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
