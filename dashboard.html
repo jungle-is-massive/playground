@@ -172,6 +172,49 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
   .metric{min-width:50%}
   .ch-meta{display:none}
 }
+
+.focus-layout{display:grid;grid-template-columns:320px 1fr;gap:16px;align-items:start}
+.focus-sidebar{display:flex;flex-direction:column;gap:10px}
+.focus-section{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.focus-section-head{padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafaf8}
+.focus-section-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--grey)}
+.focus-count{font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px}
+.fc-red{background:rgba(255,77,77,.1);color:var(--red)}
+.fc-amber{background:rgba(245,166,35,.1);color:#8a5500}
+.fc-blue{background:rgba(74,144,217,.1);color:#185fa5}
+.focus-item{display:flex;align-items:flex-start;gap:10px;padding:9px 16px;border-bottom:1px solid var(--border)}
+.focus-item:last-child{border-bottom:none}
+.fi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.fi-dot.red{background:var(--red)}.fi-dot.amber{background:var(--amber)}.fi-dot.blue{background:var(--blue)}.fi-dot.grey{background:var(--grey-mid)}
+.fi-body{flex:1;min-width:0}
+.fi-name{font-size:12px;font-weight:500;color:var(--black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fi-client{font-size:11px;color:var(--grey);margin-top:1px}
+.fi-meta{font-size:11px;font-weight:500;flex-shrink:0;text-align:right}
+.fi-meta.red{color:var(--red)}.fi-meta.amber{color:#8a5500}.fi-meta.grey{color:var(--grey)}
+.cal-wrap{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.cal-head{padding:12px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafaf8}
+.cal-title{font-size:14px;font-weight:500;letter-spacing:-.2px}
+.wbtn{font-family:inherit;font-size:11px;padding:4px 10px;border:1px solid var(--border-strong);border-radius:6px;background:transparent;color:var(--grey);cursor:pointer;transition:all .12s}
+.wbtn.active{background:var(--black);color:#fff;border-color:var(--black)}
+.cal-day-header{display:grid;border-bottom:1px solid var(--border);background:#fafaf8}
+.cal-day-col{padding:8px 6px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;color:var(--grey);border-right:1px solid var(--border);text-align:center}
+.cal-day-col:last-child{border-right:none}
+.cal-day-col.today-col{color:var(--black)}
+.cal-row{display:grid;border-bottom:1px solid var(--border)}
+.cal-row:last-child{border-bottom:none}
+.cal-cell{padding:5px 6px;border-right:1px solid var(--border);min-height:72px}
+.cal-cell:last-child{border-right:none}
+.cal-cell.today-cell{background:rgba(139,255,87,.05)}
+.cal-cell.past-cell{background:#fafaf8}
+.cal-date{font-size:10px;font-weight:600;color:var(--grey);margin-bottom:3px}
+.cal-date.today{color:var(--black)}
+.cal-ev{font-size:10px;padding:2px 5px;border-radius:3px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default}
+.ev-live{background:#D8FFB8;color:#2A6000}
+.ev-quote{background:#FFF0D0;color:#8A4500}
+.ev-over{background:#FFE0E0;color:#8A0000}
+.ev-risk{background:#FFF3C4;color:#7A5500}
+.cal-cluster{font-size:10px;color:var(--grey);font-style:italic;margin-top:2px}
+@media(max-width:900px){.focus-layout{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -181,6 +224,7 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="switchTab('pipeline',this)">Pipeline</button>
     <button class="nav-tab" onclick="switchTab('clients',this)">Existing clients</button>
+    <button class="nav-tab" onclick="switchTab('focus',this)">Focus</button>
   </div>
   <div class="nav-right">
     <div class="live-badge"><div class="live-dot"></div>Synergist</div>
@@ -230,6 +274,29 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
     </div>
     <div id="clientList"><div class="loading"><div class="spinner"></div><br>Connecting to Synergist…</div></div>
   </div>
+
+  <!-- FOCUS PANEL -->
+  <div class="panel" id="panel-focus">
+    <div class="metrics" id="focus-metrics">
+      <div class="metric"><div class="metric-label">Loading</div><div class="metric-val">—</div></div>
+    </div>
+    <div class="controls" style="margin-bottom:1.25rem">
+      <span style="font-size:12px;color:var(--grey);margin-right:4px">Show:</span>
+      <button class="wbtn active" onclick="setWeeks(1,this)">1 week</button>
+      <button class="wbtn" onclick="setWeeks(2,this)">2 weeks</button>
+      <button class="wbtn" onclick="setWeeks(3,this)">3 weeks</button>
+      <button class="wbtn" onclick="setWeeks(4,this)">4 weeks</button>
+    </div>
+    <div class="focus-layout">
+      <div class="focus-sidebar" id="focusSidebar">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+      <div class="cal-wrap" id="focusCal">
+        <div class="loading"><div class="spinner"></div></div>
+      </div>
+    </div>
+  </div>
+
 
 </div>
 
@@ -617,6 +684,170 @@ function switchTab(tab, el){
   el.classList.add('active');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
+  if(tab==='focus') renderFocus();
+}
+
+
+// ── FOCUS ──
+let focusWeeks = 1;
+
+function setWeeks(n, el) {
+  focusWeeks = n;
+  document.querySelectorAll('.wbtn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderFocus();
+}
+
+function pd(s) { // parseDate
+  if (!s || s === '0000-00-00') return null;
+  try { const d = new Date(s); d.setHours(0,0,0,0); return isNaN(d.getTime()) ? null : d; } catch { return null; }
+}
+
+function renderFocusMetrics() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cutoff28 = new Date(today); cutoff28.setDate(today.getDate()+28);
+  const sixtyAgo = new Date(today); sixtyAgo.setDate(today.getDate()-60);
+  const allExternal = j => !isInternal(j.jobClientName||'');
+
+  const upcoming  = [...LIVE_JOBS,...QUOTE_JOBS].filter(allExternal).filter(j=>{const d=pd(j.jobDateDue);return d&&d>=today&&d<=cutoff28;});
+  const overdue   = [...LIVE_JOBS,...QUOTE_JOBS].filter(allExternal).filter(j=>{const d=pd(j.jobDateDue);return d&&d<today&&d>sixtyAgo;});
+  const overBudget= LIVE_JOBS.filter(allExternal).filter(j=>parseInt(j.jobThermProgress||0)>=100);
+  const atRisk    = LIVE_JOBS.filter(allExternal).filter(j=>{const p=parseInt(j.jobThermProgress||0);return p>=85&&p<100;});
+
+  document.getElementById('focus-metrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Due in 4 weeks</div><div class="metric-val"><strong>${upcoming.length}</strong></div><div class="metric-sub">approaching deadline</div></div>
+    <div class="metric"><div class="metric-label">Recently overdue</div><div class="metric-val"><strong class="${overdue.length?'r':'g'}">${overdue.length}</strong></div><div class="metric-sub">within past 60 days</div></div>
+    <div class="metric"><div class="metric-label">Over budget</div><div class="metric-val"><strong class="${overBudget.length?'r':'g'}">${overBudget.length}</strong></div><div class="metric-sub">live jobs exceeded</div></div>
+    <div class="metric"><div class="metric-label">At risk</div><div class="metric-val"><strong class="${atRisk.length?'r':'g'}">${atRisk.length}</strong></div><div class="metric-sub">85–99% budget used</div></div>`;
+}
+
+function renderFocusSidebar() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const cutoff = new Date(today); cutoff.setDate(today.getDate()+focusWeeks*7);
+  const sixtyAgo = new Date(today); sixtyAgo.setDate(today.getDate()-60);
+  const ext = j => !isInternal(j.jobClientName||'');
+
+  const overBudget = LIVE_JOBS.filter(ext).filter(j=>parseInt(j.jobThermProgress||0)>=100)
+    .sort((a,b)=>parseInt(b.jobThermProgress||0)-parseInt(a.jobThermProgress||0));
+  const atRisk = LIVE_JOBS.filter(ext).filter(j=>{const p=parseInt(j.jobThermProgress||0);return p>=85&&p<100;})
+    .sort((a,b)=>parseInt(b.jobThermProgress||0)-parseInt(a.jobThermProgress||0));
+  const upcoming = [...LIVE_JOBS,...QUOTE_JOBS].filter(ext)
+    .filter(j=>{const d=pd(j.jobDateDue);return d&&d>=today&&d<=cutoff;})
+    .sort((a,b)=>pd(a.jobDateDue)-pd(b.jobDateDue));
+  const overdue = [...LIVE_JOBS,...QUOTE_JOBS].filter(ext)
+    .filter(j=>{const d=pd(j.jobDateDue);return d&&d<today&&d>sixtyAgo;})
+    .sort((a,b)=>pd(b.jobDateDue)-pd(a.jobDateDue));
+
+  const daysLabel = dateStr => {
+    const d = pd(dateStr); if(!d) return '—';
+    const diff = Math.ceil((d-today)/86400000);
+    if(diff===0) return 'Today';
+    if(diff===1) return 'Tomorrow';
+    if(diff<0) return Math.abs(diff)+'d ago';
+    return 'in '+diff+'d';
+  };
+
+  const item = (j, dotCls, meta, metaCls) =>
+    `<div class="focus-item"><div class="fi-dot ${dotCls}"></div><div class="fi-body"><div class="fi-name">${esc(j.jobDescription1stLine)}</div><div class="fi-client">${esc(j.jobClientName)} · ${esc(j.jobHandlerFullName||'—')}</div></div><div class="fi-meta ${metaCls}">${meta}</div></div>`;
+
+  const section = (title, items, fcCls, fn) => !items.length ? '' :
+    `<div class="focus-section"><div class="focus-section-head"><div class="focus-section-title">${title}</div><span class="focus-count ${fcCls}">${items.length}</span></div>${items.slice(0,6).map(fn).join('')}${items.length>6?`<div style="padding:8px 16px;font-size:11px;color:var(--grey)">+${items.length-6} more</div>`:''}</div>`;
+
+  const html =
+    section('Over budget', overBudget, 'fc-red', j=>item(j,'red',j.jobThermProgress,'red'))+
+    section('At risk', atRisk, 'fc-amber', j=>item(j,'amber',j.jobThermProgress,'amber'))+
+    section('Due this window', upcoming, 'fc-blue', j=>item(j,'blue',daysLabel(j.jobDateDue),'grey'))+
+    section('Recently overdue', overdue, 'fc-red', j=>item(j,'red',daysLabel(j.jobDateDue),'red'));
+
+  document.getElementById('focusSidebar').innerHTML = html ||
+    '<div class="focus-section"><div style="padding:2rem;text-align:center;color:var(--grey);font-size:13px">Nothing flagged for this period.</div></div>';
+}
+
+function renderFocusCalendar() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  // Start Monday of current week
+  const monday = new Date(today);
+  monday.setDate(today.getDate()-((today.getDay()+6)%7));
+  const cutoff = new Date(monday); cutoff.setDate(monday.getDate()+focusWeeks*7);
+
+  // Build date->jobs map
+  const evMap = {};
+  [...LIVE_JOBS,...QUOTE_JOBS].filter(j=>!isInternal(j.jobClientName||'')).forEach(j=>{
+    const d = pd(j.jobDateDue);
+    if(!d||d<monday||d>=cutoff) return;
+    const k = d.toISOString().slice(0,10);
+    if(!evMap[k]) evMap[k]=[];
+    evMap[k].push(j);
+  });
+
+  const DAY_NAMES = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const isToday = d => d.toISOString().slice(0,10)===today.toISOString().slice(0,10);
+  const isPast  = d => d < today && !isToday(d);
+  const therm   = j => parseInt(j.jobThermProgress||0);
+  const evCls   = j => j.jobStatusDescription==='Quote'?'ev-quote':therm(j)>=100?'ev-over':therm(j)>=85?'ev-risk':'ev-live';
+
+  // Build weeks array
+  const weeks = [];
+  let cur = new Date(monday);
+  while(cur<cutoff){
+    const wk=[];
+    for(let i=0;i<7;i++){wk.push(new Date(cur));cur.setDate(cur.getDate()+1);}
+    weeks.push(wk);
+  }
+
+  const shortName = s => s.length>13?s.slice(0,13)+'…':s;
+
+  let html = `<div class="cal-head"><div class="cal-title">Activity calendar — job due dates</div><div style="font-size:11px;color:var(--grey)">${monday.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${new Date(cutoff-86400000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div></div>`;
+
+  // Header row
+  html += `<div class="cal-day-header" style="grid-template-columns:repeat(7,1fr)">`;
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    html+=`<div class="cal-day-col ${isToday(d)?'today-col':''}">${DAY_NAMES[i]}</div>`;
+  }
+  html += '</div>';
+
+  // Week rows
+  weeks.forEach(week=>{
+    html+=`<div class="cal-row" style="grid-template-columns:repeat(7,1fr)">`;
+    week.forEach(d=>{
+      const k=d.toISOString().slice(0,10);
+      const evs=evMap[k]||[];
+      const isCluster=evs.length>=5;
+      html+=`<div class="cal-cell ${isToday(d)?'today-cell':''} ${isPast(d)?'past-cell':''}">`;
+      html+=`<div class="cal-date ${isToday(d)?'today':''}">${d.getDate()} ${d.toLocaleDateString('en-GB',{month:'short'})}</div>`;
+      if(isCluster){
+        const liveN=evs.filter(j=>j.jobStatusDescription==='Live').length;
+        const quoteN=evs.filter(j=>j.jobStatusDescription==='Quote').length;
+        if(liveN) html+=`<div class="cal-ev ev-live">${liveN} live jobs</div>`;
+        if(quoteN) html+=`<div class="cal-ev ev-quote">${quoteN} quotes</div>`;
+        html+=`<div class="cal-cluster">⚠ Likely placeholder</div>`;
+      } else {
+        evs.forEach(j=>{
+          html+=`<div class="cal-ev ${evCls(j)}" title="${esc(j.jobClientName+': '+j.jobDescription1stLine)}">${esc(shortName(j.jobClientName))}</div>`;
+        });
+      }
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+
+  // Legend
+  html+=`<div style="display:flex;gap:14px;padding:10px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--grey);flex-wrap:wrap">
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#D8FFB8;display:inline-block"></span>Live</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#FFF0D0;display:inline-block"></span>Quote</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#FFF3C4;display:inline-block"></span>At risk</span>
+    <span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:10px;border-radius:2px;background:#FFE0E0;display:inline-block"></span>Over budget</span>
+  </div>`;
+
+  document.getElementById('focusCal').innerHTML = html;
+}
+
+function renderFocus() {
+  if(!LIVE_JOBS.length && !QUOTE_JOBS.length) return;
+  renderFocusMetrics();
+  renderFocusSidebar();
+  renderFocusCalendar();
 }
 
 // ── INIT ──
