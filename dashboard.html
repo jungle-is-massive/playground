@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jungle — Agency Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --cream:#F5F2EB; --black:#111110; --green:#8BFF57;
+  --green-bg:rgba(139,255,87,0.1); --green-border:rgba(139,255,87,0.25);
+  --grey:#7A7972; --grey-light:#E8E5DC; --grey-mid:#CFCCC3;
+  --border:rgba(17,17,16,0.09); --border-strong:rgba(17,17,16,0.2);
+  --red:#FF4D4D; --amber:#F5A623; --blue:#4A90D9;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--cream);color:var(--black);font-family:'DM Sans',system-ui,sans-serif;font-size:14px;line-height:1.5;min-height:100vh}
+
+/* NAV */
+nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align-items:center;gap:0;height:52px}
+.nav-logo{font-size:17px;font-weight:500;letter-spacing:-.5px;color:#fff;padding:0 1.5rem;border-right:1px solid rgba(255,255,255,.08);height:100%;display:flex;align-items:center;gap:0;white-space:nowrap}
+.nav-logo span{color:var(--green)}
+.nav-tabs{display:flex;height:100%;flex:1}
+.nav-tab{padding:0 1.25rem;font-size:13px;color:rgba(255,255,255,.45);cursor:pointer;display:flex;align-items:center;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none;font-family:inherit}
+.nav-tab:hover{color:rgba(255,255,255,.8)}
+.nav-tab.active{color:#fff;border-bottom-color:var(--green)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px;padding:0 1.5rem}
+.live-badge{display:flex;align-items:center;gap:6px;font-size:11px;color:rgba(255,255,255,.4)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.last-sync{font-size:11px;color:rgba(255,255,255,.25)}
+.btn-sm{font-family:inherit;font-size:11px;font-weight:500;color:var(--black);background:var(--green);border:none;border-radius:20px;padding:5px 12px;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.btn-sm:hover{opacity:.85}
+.btn-sm:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost-sm{font-family:inherit;font-size:11px;color:rgba(255,255,255,.5);background:transparent;border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;cursor:pointer;transition:all .15s;text-decoration:none;display:flex;align-items:center}
+.btn-ghost-sm:hover{color:#fff;border-color:rgba(255,255,255,.35)}
+
+/* WRAP */
+.wrap{max-width:1240px;margin:0 auto;padding:1.5rem 2rem 4rem}
+
+/* PANELS */
+.panel{display:none}
+.panel.active{display:block}
+
+/* METRICS STRIP */
+.metrics{display:flex;background:var(--black);border-radius:10px;overflow:hidden;margin-bottom:1.75rem}
+.metric{flex:1;padding:16px 20px;border-right:1px solid rgba(255,255,255,.06)}
+.metric:last-child{border-right:none}
+.metric-label{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.7px;color:rgba(255,255,255,.35);margin-bottom:5px}
+.metric-val{font-size:22px;font-weight:300;letter-spacing:-.8px;color:#fff}
+.metric-val strong{font-weight:500}
+.metric-val .g{color:var(--green)}
+.metric-val .r{color:var(--red)}
+.metric-sub{font-size:11px;color:rgba(255,255,255,.25);margin-top:2px}
+
+/* CONTROLS */
+.controls{display:flex;align-items:center;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
+.pill{font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border-strong);background:transparent;color:var(--grey);cursor:pointer;transition:all .12s;font-family:inherit}
+.pill:hover{border-color:var(--black);color:var(--black)}
+.pill.active{background:var(--black);color:var(--green);border-color:var(--black)}
+.search-wrap{margin-left:auto;position:relative}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);opacity:.3;pointer-events:none}
+.search{font-family:inherit;font-size:12px;padding:6px 12px 6px 32px;border:1px solid var(--border-strong);border-radius:20px;background:transparent;color:var(--black);width:200px;outline:none;transition:border-color .12s}
+.search:focus{border-color:var(--black)}
+.search::placeholder{color:var(--grey)}
+
+/* JOB CARDS — Pipeline */
+.pipeline-grid{display:flex;flex-direction:column;gap:8px}
+
+.job-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .12s}
+.job-card:hover{border-color:var(--border-strong)}
+
+.job-card-header{display:grid;grid-template-columns:1fr 110px 100px 130px 90px 32px;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
+.job-name-cell .jname{font-size:13px;font-weight:500;color:var(--black);line-height:1.25}
+.job-name-cell .jclient{font-size:11px;color:var(--grey);margin-top:1px}
+.job-value{font-size:13px;font-weight:500;color:var(--black);text-align:right}
+.job-value.missing{color:var(--grey-mid);font-style:italic;font-weight:400;font-size:11px}
+.job-handler{font-size:12px;color:var(--grey)}
+.job-due{font-size:11px;color:var(--grey)}
+.job-due.overdue{color:var(--red);font-weight:500}
+.job-due.soon{color:var(--amber);font-weight:500}
+
+.status-pill{font-size:10px;font-weight:500;padding:3px 9px;border-radius:20px;display:inline-block;white-space:nowrap}
+.st-live{background:#D8FFB8;color:#2A6000}
+.st-quote{background:#FFF0D0;color:#8A4500}
+.st-onhold{background:#FFE0E0;color:#8A0000}
+
+.therm-wrap{display:flex;align-items:center;gap:6px;min-width:80px}
+.therm-bar{flex:1;height:3px;background:var(--grey-light);border-radius:2px;overflow:hidden}
+.therm-fill{height:100%;border-radius:2px;background:var(--green)}
+.therm-fill.warn{background:var(--amber)}
+.therm-fill.danger{background:var(--red)}
+.therm-pct{font-size:10px;color:var(--grey);white-space:nowrap;min-width:26px;text-align:right}
+
+.chevron{width:18px;height:18px;display:flex;align-items:center;justify-content:center;color:var(--grey-mid);transition:transform .2s;flex-shrink:0}
+.job-card.open .chevron{transform:rotate(90deg)}
+
+/* EXPAND PANEL */
+.job-detail{display:none;border-top:1px solid var(--border);padding:16px 18px;background:#fafaf8}
+.job-card.open .job-detail{display:block}
+
+.detail-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:14px}
+.detail-item{font-size:11px}
+.detail-label{color:var(--grey);text-transform:uppercase;letter-spacing:.5px;font-size:9px;font-weight:600;margin-bottom:3px}
+.detail-val{font-size:13px;font-weight:500;color:var(--black)}
+.detail-val.muted{color:var(--grey);font-weight:400;font-style:italic}
+
+.activities-section{margin-top:12px}
+.activities-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--grey);margin-bottom:8px}
+.activity-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
+.activity-row:last-child{border-bottom:none}
+.act-subject{flex:1;color:var(--black);font-weight:500}
+.act-owner{color:var(--grey);min-width:120px}
+.act-due{color:var(--grey);min-width:80px;text-align:right}
+.act-due.overdue{color:var(--red)}
+.act-complete{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--grey-mid);flex-shrink:0}
+.act-complete.done{background:var(--green);border-color:var(--green)}
+.no-activities{font-size:12px;color:var(--grey);font-style:italic}
+
+.loading-detail{font-size:12px;color:var(--grey);padding:8px 0;font-style:italic}
+
+/* CLIENT-GROUPED — Existing Clients */
+.client-block{margin-bottom:10px;border:1px solid var(--border);border-radius:12px;overflow:hidden;background:#fff}
+.client-block:hover{border-color:var(--border-strong)}
+.client-header{display:flex;align-items:center;padding:14px 18px;cursor:pointer;gap:12px;user-select:none;background:#fff;border-bottom:1px solid transparent;transition:background .12s}
+.client-block.open .client-header{border-bottom-color:var(--border);background:#fafaf8}
+.ch-chevron{width:16px;height:16px;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--grey-mid);transition:transform .2s}
+.client-block.open .ch-chevron{transform:rotate(90deg)}
+.ch-name{font-size:15px;font-weight:500;letter-spacing:-.3px;flex:1}
+.ch-meta{display:flex;gap:18px;align-items:center;margin-left:auto;flex-shrink:0}
+.ch-stat{font-size:11px;color:var(--grey);white-space:nowrap}
+.ch-stat strong{font-size:13px;font-weight:500;color:var(--black)}
+
+.jobs-list{display:none}
+.client-block.open .jobs-list{display:block}
+
+.jobs-list-header{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--grey);padding:8px 18px;display:grid;grid-template-columns:1fr 130px 110px 110px 80px;gap:10px;background:#fafaf8;border-bottom:1px solid var(--border)}
+.job-list-row{display:grid;grid-template-columns:1fr 130px 110px 110px 80px;align-items:center;gap:10px;padding:11px 18px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s}
+.job-list-row:last-child{border-bottom:none}
+.job-list-row:hover{background:#f5f5f2}
+.job-list-row.expanded{background:#f5f5f2}
+.jlr-name{font-size:13px;font-weight:500;color:var(--black)}
+.jlr-num{font-size:10px;color:var(--grey)}
+.jlr-handler{font-size:12px;color:var(--grey)}
+.jlr-val{font-size:12px;font-weight:500;color:var(--black);text-align:right}
+.jlr-val.missing{color:var(--grey-mid);font-size:11px;font-weight:400;font-style:italic}
+
+.job-row-detail{display:none;padding:12px 18px 14px;background:#f5f5f2;border-bottom:1px solid var(--border)}
+.job-row-detail.open{display:block}
+.jrd-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:10px}
+
+/* LOADING / ERROR */
+.loading{text-align:center;padding:5rem 0;color:var(--grey)}
+.spinner{width:20px;height:20px;border:2px solid var(--grey-light);border-top-color:var(--black);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;margin-bottom:10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:4rem 0;color:var(--grey);font-size:14px}
+.err{text-align:center;padding:4rem 0;color:var(--red)}
+
+/* DATA GAP BANNER */
+.gap-banner{display:flex;align-items:center;gap:12px;background:rgba(245,166,35,.08);border:1px solid rgba(245,166,35,.25);border-radius:8px;padding:10px 16px;margin-bottom:1.5rem;font-size:12px;color:#7a5500}
+.gap-banner a{color:#7a5500;font-weight:500}
+
+@media(max-width:900px){
+  .job-card-header{grid-template-columns:1fr auto}
+  .job-card-header>*:nth-child(n+3):not(:last-child){display:none}
+  .jobs-list-header,.job-list-row{grid-template-columns:1fr auto}
+  .jobs-list-header>*:nth-child(n+3),.job-list-row>*:nth-child(n+3):not(:last-child){display:none}
+  .detail-grid,.jrd-grid{grid-template-columns:1fr 1fr}
+  .metrics{flex-wrap:wrap}
+  .metric{min-width:50%}
+  .ch-meta{display:none}
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">jungle<span>.</span>ops</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="switchTab('pipeline',this)">Pipeline</button>
+    <button class="nav-tab" onclick="switchTab('clients',this)">Existing clients</button>
+  </div>
+  <div class="nav-right">
+    <div class="live-badge"><div class="live-dot"></div>Synergist</div>
+    <span class="last-sync" id="lastSync"></span>
+    <a class="btn-ghost-sm" href="gaps.html">⚠ Data gaps</a>
+    <button class="btn-sm" id="btnRefresh" onclick="loadAll()">↻ Refresh</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <!-- PIPELINE PANEL -->
+  <div class="panel active" id="panel-pipeline">
+    <div class="metrics" id="pipe-metrics">
+      <div class="metric"><div class="metric-label">Loading</div><div class="metric-val">—</div></div>
+    </div>
+    <div class="gap-banner">
+      ⚠ <span>Revenue values missing on all Quote jobs — <a href="gaps.html">see data gaps</a> for what to fix in Synergist.</span>
+    </div>
+    <div class="controls">
+      <button class="pill active" onclick="setPipeFilter('all',this)">All</button>
+      <button class="pill" onclick="setPipeFilter('Campaign',this)">Campaign</button>
+      <button class="pill" onclick="setPipeFilter('Retainer',this)">Retainer</button>
+      <button class="pill" onclick="setPipeFilter('(blank)',this)">Untagged</button>
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#111110" stroke-width="1.2"/><line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="#111110" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <input class="search" type="text" id="pipeSearch" placeholder="Search clients or jobs…" oninput="renderPipeline()">
+      </div>
+    </div>
+    <div id="pipelineList"><div class="loading"><div class="spinner"></div><br>Connecting to Synergist…</div></div>
+  </div>
+
+  <!-- CLIENTS PANEL -->
+  <div class="panel" id="panel-clients">
+    <div class="metrics" id="client-metrics">
+      <div class="metric"><div class="metric-label">Loading</div><div class="metric-val">—</div></div>
+    </div>
+    <div class="controls">
+      <button class="pill active" onclick="setClientFilter('all',this)">All</button>
+      <button class="pill" onclick="setClientFilter('Retainer',this)">Retainers</button>
+      <button class="pill" onclick="setClientFilter('Campaign',this)">Campaigns</button>
+      <button class="pill" onclick="setClientFilter('(blank)',this)">Untagged</button>
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#111110" stroke-width="1.2"/><line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="#111110" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <input class="search" type="text" id="clientSearch" placeholder="Search clients or jobs…" oninput="renderClients()">
+      </div>
+    </div>
+    <div id="clientList"><div class="loading"><div class="spinner"></div><br>Connecting to Synergist…</div></div>
+  </div>
+
+</div>
+
+<script>
+const SERVER = "https://junglecreations.synergist.cloud";
+const USER   = "Coris.leachman";
+const PASS   = "Jungle@123";
+
+const EXCLUDE = new Set(["AGENCY INTERNAL - Non-Billable","MEDIA INTERNAL - Non-Bilable",
+  "Jungle Creations Ltd","Creator - Media","Auto created internal organisation for external bookings"]);
+const EXCL_P = [" - Media","Media Cross-Platform","Website - Media"];
+function isInternal(n){ return EXCLUDE.has(n)||EXCL_P.some(p=>n.includes(p)); }
+
+let QUOTE_JOBS = [], LIVE_JOBS = [];
+let ACTIVITIES = {};   // jobNumber -> [activities]
+let JOB_DETAILS = {};  // jobNumber -> detail object
+let openCards = new Set();
+let openClients = new Set();
+let openJobRows = new Set();
+let pipeFilter = 'all', clientFilter = 'all';
+let currentTab = 'pipeline';
+
+// ── API ──
+async function syn(endpoint, params){
+  const qp = new URLSearchParams({user:USER,password:PASS,version:"4",company:"1",...params});
+  const r = await fetch(`${SERVER}/jsonapi/${endpoint}?${qp}`);
+  if(!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+}
+
+async function fetchAllJobs(){
+  let all=[],page=1,total=null;
+  while(true){
+    const d = await syn("jobs.json",{modelstructure:"jobslist",style:"modeldata",rows:"200",page:String(page)});
+    all=all.concat(d.data);
+    if(total===null) total=d.totalrows;
+    if(all.length>=total) break;
+    page++;
+  }
+  return all;
+}
+
+// ── HELPERS ──
+function fmt(n){ if(!n||n===0) return null; return '£'+Number(n).toLocaleString('en-GB',{maximumFractionDigits:0}); }
+function fmtDate(d){
+  if(!d||d==='0000-00-00') return null;
+  try{ return new Date(d).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'2-digit'}); }catch{return null;}
+}
+function daysUntil(d){
+  if(!d||d==='0000-00-00') return null;
+  return Math.ceil((new Date(d)-new Date())/86400000);
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function termType(j){ return j.jobCustomField19||'(blank)'; }
+function safeId(s){ return s.replace(/[^a-zA-Z0-9]/g,'_'); }
+
+function thermHtml(t,compact){
+  if(!t) return compact?'<span style="font-size:10px;color:var(--grey)">—</span>':'';
+  const pct=parseInt(t),cap=Math.min(pct,100);
+  const cls=pct>=100?'danger':pct>=85?'warn':'';
+  const col=pct>=100?'color:var(--red)':pct>=85?'color:var(--amber)':'';
+  return `<div class="therm-wrap"><div class="therm-bar"><div class="therm-fill ${cls}" style="width:${cap}%"></div></div><span class="therm-pct" style="${col}">${pct}%</span></div>`;
+}
+
+function dueBadge(dateStr){
+  const days=daysUntil(dateStr);
+  const label=fmtDate(dateStr);
+  if(!label) return '<span class="job-due" style="color:var(--grey-mid)">No date</span>';
+  const cls=days!==null&&days<0?'overdue':days!==null&&days<=14?'soon':'';
+  return `<span class="job-due ${cls}">${label}${days!==null&&days<0?' (overdue)':days!==null&&days<=7?' (this week)':''}</span>`;
+}
+
+function statusPill(s){
+  const m={Live:'st-live',Quote:'st-quote','On-hold':'st-onhold'};
+  return `<span class="status-pill ${m[s]||'st-quote'}">${esc(s)}</span>`;
+}
+
+// ── LOAD ──
+async function loadAll(){
+  const btn=document.getElementById('btnRefresh');
+  btn.disabled=true; btn.textContent='↻ Loading…';
+  document.getElementById('pipelineList').innerHTML='<div class="loading"><div class="spinner"></div><br>Fetching jobs…</div>';
+  document.getElementById('clientList').innerHTML='<div class="loading"><div class="spinner"></div><br>Fetching jobs…</div>';
+
+  try{
+    const all = await fetchAllJobs();
+    const active = all.filter(j=>!j.jobCompleted&&!isInternal(j.jobClientName||''));
+    QUOTE_JOBS = active.filter(j=>j.jobStatusDescription==='Quote');
+    LIVE_JOBS  = active.filter(j=>j.jobStatusDescription==='Live');
+
+    const now = new Date();
+    document.getElementById('lastSync').textContent =
+      `Synced ${now.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'})}`;
+
+    openCards = new Set();
+    openClients = new Set();
+    openJobRows = new Set();
+    JOB_DETAILS = {};
+    ACTIVITIES = {};
+
+    renderPipelineMetrics();
+    renderPipeline();
+    renderClientMetrics();
+    renderClients();
+
+  }catch(e){
+    document.getElementById('pipelineList').innerHTML=`<div class="err">Could not load Synergist data.<br><small>${esc(e.message)}</small></div>`;
+    document.getElementById('clientList').innerHTML=`<div class="err">Could not load Synergist data.<br><small>${esc(e.message)}</small></div>`;
+  }finally{
+    btn.disabled=false; btn.textContent='↻ Refresh';
+  }
+}
+
+// ── PIPELINE ──
+function renderPipelineMetrics(){
+  const total=QUOTE_JOBS.length;
+  const withVal=QUOTE_JOBS.filter(j=>j.jobCustomField6>0).length;
+  const totalVal=QUOTE_JOBS.reduce((a,j)=>a+(j.jobCustomField6||0),0);
+  const overdue=QUOTE_JOBS.filter(j=>daysUntil(j.jobDateDue)<0&&j.jobDateDue&&j.jobDateDue!=='0000-00-00').length;
+  const dueSoon=QUOTE_JOBS.filter(j=>{const d=daysUntil(j.jobDateDue);return d!==null&&d>=0&&d<=14;}).length;
+
+  document.getElementById('pipe-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Total quotes</div><div class="metric-val"><strong>${total}</strong></div><div class="metric-sub">active opportunities</div></div>
+    <div class="metric"><div class="metric-label">Pipeline value</div><div class="metric-val"><strong class="g">${totalVal>0?fmt(totalVal):'No data'}</strong></div><div class="metric-sub">${withVal} of ${total} have values</div></div>
+    <div class="metric"><div class="metric-label">Due this fortnight</div><div class="metric-val"><strong class="g">${dueSoon}</strong></div><div class="metric-sub">need attention soon</div></div>
+    <div class="metric"><div class="metric-label">Overdue</div><div class="metric-val"><strong class="${overdue>0?'r':'g'}">${overdue}</strong></div><div class="metric-sub">past due date</div></div>`;
+}
+
+function pipeFiltered(){
+  const q=(document.getElementById('pipeSearch').value||'').toLowerCase();
+  return QUOTE_JOBS.filter(j=>{
+    const tt=termType(j);
+    if(pipeFilter!=='all'&&tt!==pipeFilter) return false;
+    if(!q) return true;
+    return (j.jobClientName||'').toLowerCase().includes(q)||(j.jobDescription1stLine||'').toLowerCase().includes(q);
+  });
+}
+
+function renderPipeline(){
+  const jobs=pipeFiltered();
+  const el=document.getElementById('pipelineList');
+  if(!jobs.length){el.innerHTML='<div class="empty">No jobs match your filter.</div>';return;}
+
+  el.innerHTML=jobs.map(j=>{
+    const id=safeId(j.jobNumber);
+    const isOpen=openCards.has(j.jobNumber);
+    const val=fmt(j.jobCustomField6);
+    const tt=termType(j);
+    return `
+    <div class="job-card ${isOpen?'open':''}" id="jc-${id}">
+      <div class="job-card-header" data-job="${esc(j.jobNumber)}">
+        <div class="job-name-cell">
+          <div class="jname">${esc(j.jobDescription1stLine)}</div>
+          <div class="jclient">${esc(j.jobClientName)}</div>
+        </div>
+        <div>
+          <span class="status-pill st-quote">${esc(tt!=='(blank)'?tt:'Untagged')}</span>
+        </div>
+        <div class="job-value ${val?'':'missing'}">${val||'Value missing'}</div>
+        <div class="job-handler">${esc(j.jobHandlerFullName||'—')}</div>
+        ${dueBadge(j.jobDateDue)}
+        <div class="chevron">
+          <svg width="8" height="12" viewBox="0 0 8 12" fill="none"><path d="M1.5 1.5L6.5 6L1.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+      </div>
+      <div class="job-detail" id="jd-${id}">
+        <div class="loading-detail" id="jdload-${id}">Loading details…</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setPipeFilter(f,el){
+  pipeFilter=f;
+  document.querySelectorAll('#panel-pipeline .pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderPipeline();
+}
+
+// ── CLIENTS ──
+function renderClientMetrics(){
+  const total=LIVE_JOBS.length;
+  const retainers=LIVE_JOBS.filter(j=>termType(j)==='Retainer').length;
+  const campaigns=LIVE_JOBS.filter(j=>termType(j)==='Campaign').length;
+  const over=LIVE_JOBS.filter(j=>parseInt(j.jobThermProgress)>=100).length;
+  const atRisk=LIVE_JOBS.filter(j=>{const p=parseInt(j.jobThermProgress);return p>=85&&p<100;}).length;
+
+  document.getElementById('client-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Live jobs</div><div class="metric-val"><strong>${total}</strong></div><div class="metric-sub">in delivery</div></div>
+    <div class="metric"><div class="metric-label">Retainers</div><div class="metric-val"><strong class="g">${retainers}</strong></div><div class="metric-sub">ongoing</div></div>
+    <div class="metric"><div class="metric-label">Campaigns</div><div class="metric-val"><strong>${campaigns}</strong></div><div class="metric-sub">project work</div></div>
+    <div class="metric"><div class="metric-label">Over budget</div><div class="metric-val"><strong class="${over>0?'r':'g'}">${over}</strong></div><div class="metric-sub">${atRisk} approaching limit</div></div>`;
+}
+
+function clientFiltered(){
+  const q=(document.getElementById('clientSearch').value||'').toLowerCase();
+  const byClient={};
+  LIVE_JOBS.forEach(j=>{
+    const tt=termType(j);
+    if(clientFilter!=='all'&&tt!==clientFilter) return;
+    if(q&&!(j.jobClientName||'').toLowerCase().includes(q)&&!(j.jobDescription1stLine||'').toLowerCase().includes(q)) return;
+    const c=j.jobClientName||'Unknown';
+    if(!byClient[c]) byClient[c]=[];
+    byClient[c].push(j);
+  });
+  return Object.entries(byClient).sort(([a],[b])=>a.localeCompare(b));
+}
+
+function renderClients(){
+  const clients=clientFiltered();
+  const el=document.getElementById('clientList');
+  if(!clients.length){el.innerHTML='<div class="empty">No clients match your filter.</div>';return;}
+
+  el.innerHTML=clients.map(([clientName,jobs])=>{
+    const cid=safeId(clientName);
+    const isOpen=openClients.has(clientName);
+    const totalVal=jobs.reduce((a,j)=>a+(j.jobCustomField6||0),0);
+    const over=jobs.filter(j=>parseInt(j.jobThermProgress)>=100).length;
+
+    return `
+    <div class="client-block ${isOpen?'open':''}" id="cb-${cid}">
+      <div class="client-header" data-client="${esc(clientName).replace(/"/g,'&quot;')}">
+        <div class="ch-chevron"><svg width="8" height="12" viewBox="0 0 8 12" fill="none"><path d="M1.5 1.5L6.5 6L1.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="ch-name">${esc(clientName)}</div>
+        <div class="ch-meta">
+          <div class="ch-stat"><strong>${jobs.length}</strong> job${jobs.length!==1?'s':''}</div>
+          ${totalVal?`<div class="ch-stat"><strong>${fmt(totalVal)}</strong></div>`:''}
+          ${over?`<div class="ch-stat" style="color:var(--red)"><strong>${over}</strong> over budget</div>`:''}
+        </div>
+      </div>
+      <div class="jobs-list">
+        <div class="jobs-list-header"><span>Job</span><span>Handler</span><span style="text-align:right">Budget used</span><span style="text-align:right">Due</span><span>Type</span></div>
+        ${jobs.map(j=>{
+          const jid=safeId(j.jobNumber);
+          const isExpanded=openJobRows.has(j.jobNumber);
+          return `
+          <div class="job-list-row ${isExpanded?'expanded':''}" data-jrow="${esc(j.jobNumber)}">
+            <div><div class="jlr-name">${esc(j.jobDescription1stLine)}</div><div class="jlr-num">${esc(j.jobNumber)}</div></div>
+            <div class="jlr-handler">${esc(j.jobHandlerFullName||'—')}</div>
+            <div style="text-align:right">${thermHtml(j.jobThermProgress,true)}</div>
+            ${dueBadge(j.jobDateDue)}
+            <div>${termType(j)!=='(blank)'?`<span class="status-pill st-live" style="font-size:9px">${esc(termType(j))}</span>`:'<span style="font-size:10px;color:var(--grey-mid)">Untagged</span>'}</div>
+          </div>
+          <div class="job-row-detail ${isExpanded?'open':''}" id="jrd-${jid}">
+            <div class="loading-detail">Loading details…</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setClientFilter(f,el){
+  clientFilter=f;
+  document.querySelectorAll('#panel-clients .pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderClients();
+}
+
+// ── JOB DETAIL LOADER ──
+async function loadJobDetail(jobNum, containerEl){
+  if(JOB_DETAILS[jobNum]){
+    renderJobDetail(JOB_DETAILS[jobNum], ACTIVITIES[jobNum]||[], containerEl);
+    return;
+  }
+  try{
+    const [detailRes, actRes] = await Promise.all([
+      syn("jobs.json",{modelstructure:"jobdetails",style:"modeldata",jobnumber:jobNum}),
+      syn("activities.json",{"job-number":jobNum,"rows":"20"})
+    ]);
+    JOB_DETAILS[jobNum] = detailRes.data[0]||{};
+    ACTIVITIES[jobNum]  = actRes.data||[];
+    renderJobDetail(JOB_DETAILS[jobNum], ACTIVITIES[jobNum], containerEl);
+  }catch(e){
+    containerEl.innerHTML=`<div style="font-size:12px;color:var(--red)">Failed to load details: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderJobDetail(d, acts, el){
+  const val = fmt(d.jobQuotedPrice);
+  const pipeline = d.jobOppCurrentStatus||'—';
+  const weighting = d.jobOppWeighting ? d.jobOppWeighting+'%' : '—';
+  const stage = d.jobCurrentStageDescription||'—';
+  const team = d.jobTeamDescription||'—';
+  const comments = d.jobComments||'';
+
+  const actsHtml = acts.length===0
+    ? '<div class="no-activities">No activities logged against this job.</div>'
+    : acts.slice(0,8).map(a=>{
+        const due=fmtDate(a.activityViewDate);
+        const days=daysUntil(a.activityViewDate);
+        const overdue=days!==null&&days<0&&!a.activityCompleted;
+        return `<div class="activity-row">
+          <div class="act-complete ${a.activityCompleted?'done':''}"></div>
+          <div class="act-subject">${esc(a.activitySubject||'(no subject)')}</div>
+          <div class="act-owner">${esc(a.activityOwnerName||'—')}</div>
+          <div class="act-due ${overdue?'overdue':''}">${due||'No date'}</div>
+        </div>`;
+      }).join('');
+
+  el.innerHTML=`
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Quoted value</div><div class="detail-val ${val?'':'muted'}">${val||'Not set'}</div></div>
+      <div class="detail-item"><div class="detail-label">Pipeline status</div><div class="detail-val ${pipeline==='—'?'muted':''}">${esc(pipeline)}</div></div>
+      <div class="detail-item"><div class="detail-label">Weighting</div><div class="detail-val">${esc(weighting)}</div></div>
+      <div class="detail-item"><div class="detail-label">Current stage</div><div class="detail-val ${stage==='—'?'muted':''}">${esc(stage)}</div></div>
+      <div class="detail-item"><div class="detail-label">Team</div><div class="detail-val">${esc(team)}</div></div>
+      <div class="detail-item"><div class="detail-label">Job type</div><div class="detail-val">${esc(d.jobJobtypeDescription||'—')}</div></div>
+      <div class="detail-item"><div class="detail-label">Start date</div><div class="detail-val">${fmtDate(d.jobDateIn)||'—'}</div></div>
+      <div class="detail-item"><div class="detail-label">Due date</div><div class="detail-val">${fmtDate(d.jobDateDue)||'—'}</div></div>
+    </div>
+    ${comments?`<div style="font-size:12px;color:var(--grey);margin-bottom:12px;padding:10px 12px;background:var(--grey-light);border-radius:6px">${esc(comments)}</div>`:''}
+    <div class="activities-section">
+      <div class="activities-title">Activities / next actions</div>
+      ${actsHtml}
+    </div>`;
+}
+
+// ── EVENT DELEGATION ──
+document.addEventListener('click', async function(e){
+  // Pipeline card toggle
+  const header = e.target.closest('.job-card-header');
+  if(header){
+    const jobNum = header.getAttribute('data-job');
+    if(!jobNum) return;
+    const card = header.closest('.job-card');
+    const detailEl = card.querySelector('.job-detail');
+    const isOpen = openCards.has(jobNum);
+    if(isOpen){ openCards.delete(jobNum); card.classList.remove('open'); }
+    else {
+      openCards.add(jobNum);
+      card.classList.add('open');
+      await loadJobDetail(jobNum, detailEl);
+    }
+    return;
+  }
+
+  // Client header toggle
+  const clientH = e.target.closest('.client-header');
+  if(clientH){
+    const name = clientH.getAttribute('data-client');
+    if(!name) return;
+    const block = clientH.closest('.client-block');
+    if(openClients.has(name)){ openClients.delete(name); block.classList.remove('open'); }
+    else{ openClients.add(name); block.classList.add('open'); }
+    return;
+  }
+
+  // Job row toggle (existing clients)
+  const jrow = e.target.closest('.job-list-row');
+  if(jrow){
+    const jobNum = jrow.getAttribute('data-jrow');
+    if(!jobNum) return;
+    const jid = safeId(jobNum);
+    const detailEl = document.getElementById('jrd-'+jid);
+    if(!detailEl) return;
+    const isOpen = openJobRows.has(jobNum);
+    if(isOpen){
+      openJobRows.delete(jobNum);
+      jrow.classList.remove('expanded');
+      detailEl.classList.remove('open');
+    } else {
+      openJobRows.add(jobNum);
+      jrow.classList.add('expanded');
+      detailEl.classList.add('open');
+      await loadJobDetail(jobNum, detailEl);
+    }
+    return;
+  }
+});
+
+// ── TABS ──
+function switchTab(tab, el){
+  currentTab=tab;
+  document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+
+// ── INIT ──
+loadAll();
+</script>
+</body>
+</html>
