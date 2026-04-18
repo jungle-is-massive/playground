@@ -215,6 +215,29 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
 .ev-risk{background:#FFF3C4;color:#7A5500}
 .cal-cluster{font-size:10px;color:var(--grey);font-style:italic;margin-top:2px}
 @media(max-width:900px){.focus-layout{grid-template-columns:1fr}}
+
+/* GANTT */
+.cal-view-toggle{display:flex;gap:4px}
+.cal-view-btn{font-family:inherit;font-size:11px;padding:4px 10px;border:1px solid var(--border-strong);border-radius:6px;background:transparent;color:var(--grey);cursor:pointer;transition:all .12s}
+.cal-view-btn.active{background:var(--black);color:#fff;border-color:var(--black)}
+.gantt-wrap{overflow-x:auto}
+.gantt-table{min-width:100%;border-collapse:collapse;font-size:11px}
+.gantt-table th{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--grey);padding:6px 8px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);text-align:center;background:#fafaf8;white-space:nowrap}
+.gantt-table th.job-col{text-align:left;width:200px;position:sticky;left:0;background:#fafaf8;z-index:2}
+.gantt-table th.client-col{text-align:left;width:140px;position:sticky;left:200px;background:#fafaf8;z-index:2}
+.gantt-table td{padding:4px 8px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);vertical-align:middle}
+.gantt-table td.job-name-col{font-weight:500;color:var(--black);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;position:sticky;left:0;background:#fff;z-index:1;padding:6px 10px}
+.gantt-table td.client-name-col{color:var(--grey);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px;position:sticky;left:200px;background:#fff;z-index:1;padding:6px 10px}
+.gantt-table tr:hover td{background:#fafaf8}
+.gantt-table tr:hover td.job-name-col,.gantt-table tr:hover td.client-name-col{background:#fafaf8}
+.gantt-table td.today-col-cell{background:rgba(139,255,87,0.04)}
+.gantt-bar-cell{position:relative;min-width:28px;height:32px;padding:0}
+.gantt-bar{position:absolute;top:50%;transform:translateY(-50%);height:16px;border-radius:3px;min-width:6px;transition:opacity .15s}
+.gantt-bar:hover{opacity:.75;cursor:default}
+.gantt-deadline{position:absolute;top:50%;transform:translateY(-50%);width:8px;height:8px;border-radius:50%;border:2px solid white;z-index:1}
+.gantt-legend{display:flex;gap:14px;padding:10px 16px;border-top:1px solid var(--border);font-size:10px;color:var(--grey);flex-wrap:wrap}
+.gantt-legend span{display:flex;align-items:center;gap:4px}
+.gantt-legend .swatch{width:10px;height:10px;border-radius:2px;display:inline-block}
 </style>
 </head>
 <body>
@@ -291,8 +314,14 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
       <div class="focus-sidebar" id="focusSidebar">
         <div class="loading"><div class="spinner"></div></div>
       </div>
-      <div class="cal-wrap" id="focusCal">
-        <div class="loading"><div class="spinner"></div></div>
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;margin-bottom:8px">
+          <button class="cal-view-btn active" id="cvGrid" onclick="setCalView('grid',this)">Calendar</button>
+          <button class="cal-view-btn" id="cvGantt" onclick="setCalView('gantt',this)">Gantt</button>
+        </div>
+        <div class="cal-wrap" id="focusCal">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
       </div>
     </div>
   </div>
@@ -688,6 +717,140 @@ function switchTab(tab, el){
 }
 
 
+
+// ── CALENDAR VIEW TOGGLE ──
+let calView = 'grid';
+
+function setCalView(v, el) {
+  calView = v;
+  document.querySelectorAll('.cal-view-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderFocusCalendar();
+}
+
+// ── GANTT ──
+function renderGantt() {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((today.getDay()+6)%7));
+  const cutoff = new Date(monday); cutoff.setDate(monday.getDate() + focusWeeks*7);
+  const totalDays = focusWeeks * 7;
+
+  // All jobs with a due date in or before the window (and started before cutoff)
+  const jobs = [...LIVE_JOBS, ...QUOTE_JOBS]
+    .filter(j => !isInternal(j.jobClientName||''))
+    .filter(j => {
+      const due = pd(j.jobDateDue);
+      return due && due >= monday && due < cutoff;
+    })
+    .sort((a,b) => pd(a.jobDateDue) - pd(b.jobDateDue));
+
+  if (!jobs.length) {
+    document.getElementById('focusCal').innerHTML =
+      '<div style="padding:3rem;text-align:center;color:var(--grey)">No jobs with due dates in this window.</div>';
+    return;
+  }
+
+  // Build day columns
+  const dayLabels = [];
+  const weekBoundaries = []; // indices where a new week starts
+  for (let i=0; i<totalDays; i++) {
+    const d = new Date(monday); d.setDate(monday.getDate()+i);
+    if (i % 7 === 0) weekBoundaries.push(i);
+    dayLabels.push(d);
+  }
+
+  const dayIdx = d => {
+    const diff = Math.round((d - monday) / 86400000);
+    return Math.max(0, Math.min(diff, totalDays));
+  };
+
+  const therm = j => parseInt(j.jobThermProgress||0);
+  const barColour = j => {
+    if (j.jobStatusDescription==='Quote') return '#F5A623';
+    if (therm(j)>=100) return '#FF4D4D';
+    if (therm(j)>=85) return '#F5A623';
+    return '#8BFF57';
+  };
+  const barTextColour = j => {
+    if (therm(j)>=85 || j.jobStatusDescription==='Quote') return '#5a3a00';
+    return '#2A6000';
+  };
+
+  let html = `<div class="cal-head">
+    <div class="cal-title">Gantt view — job due dates</div>
+    <div style="font-size:11px;color:var(--grey)">${monday.toLocaleDateString('en-GB',{day:'numeric',month:'short'})} – ${new Date(cutoff-86400000).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})}</div>
+  </div>
+  <div class="gantt-wrap"><table class="gantt-table">
+  <thead><tr>
+    <th class="job-col">Job</th>
+    <th class="client-col">Client</th>`;
+
+  // Week header spanning columns, then day headers
+  // Build a two-row header: week label spanning 7 cols, then individual days
+  // Just do day cols directly for simplicity
+  dayLabels.forEach((d,i) => {
+    const isT = d.toISOString().slice(0,10) === today.toISOString().slice(0,10);
+    const isMon = i%7===0;
+    const dayName = d.toLocaleDateString('en-GB',{weekday:'short'}).slice(0,1);
+    const dateStr = d.getDate()+(isMon?` ${d.toLocaleDateString('en-GB',{month:'short'})}`:'');
+    html += `<th style="${isT?'color:var(--black);font-weight:700':''} ${isMon&&i>0?'border-left:2px solid var(--border-strong)':''}">${isT?'●':dayName}<br>${dateStr}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  jobs.forEach(j => {
+    const due = pd(j.jobDateDue);
+    const start = pd(j.jobDateIn);
+    // Bar: from job start (or window start if before) to due date
+    const startI = start && start > monday ? dayIdx(start) : 0;
+    const endI   = dayIdx(due);
+    const barLen = Math.max(1, endI - startI);
+    const colour = barColour(j);
+
+    html += `<tr>
+      <td class="job-name-col" title="${esc(j.jobDescription1stLine)}">${esc(j.jobDescription1stLine.length>28?j.jobDescription1stLine.slice(0,28)+'…':j.jobDescription1stLine)}</td>
+      <td class="client-name-col" title="${esc(j.jobClientName)}">${esc(j.jobClientName.length>18?j.jobClientName.slice(0,18)+'…':j.jobClientName)}</td>`;
+
+    dayLabels.forEach((d,i) => {
+      const isT = d.toISOString().slice(0,10) === today.toISOString().slice(0,10);
+      const isMon = i%7===0;
+      const cellStyle = `${isT?'background:rgba(139,255,87,0.06);':''}${isMon&&i>0?'border-left:2px solid var(--border-strong);':''}`;
+
+      if (i === startI) {
+        // Bar starts here — use colspan for the bar width
+        const isDeadline = (i === endI);
+        html += `<td class="gantt-bar-cell" colspan="${barLen}" style="${cellStyle}">
+          <div class="gantt-bar" style="background:${colour};left:4px;right:${isDeadline?'4px':'2px'};opacity:0.85;" title="${esc(j.jobClientName+': '+j.jobDescription1stLine)} — due ${due.toLocaleDateString('en-GB',{day:'numeric',month:'short'})}"></div>
+          ${isDeadline?`<div class="gantt-deadline" style="right:4px;background:${colour};border-color:#fff;"></div>`:''}
+        </td>`;
+        // skip ahead by barLen-1
+        // We need to track position — handled by colspan
+      } else if (i > startI && i <= endI) {
+        // Skip — covered by colspan
+      } else if (i === endI && endI !== startI) {
+        // Deadline marker
+        html += `<td class="gantt-bar-cell" style="${cellStyle}">
+          <div class="gantt-deadline" style="right:4px;background:${colour};left:50%;transform:translate(-50%,-50%);top:50%;"></div>
+        </td>`;
+      } else {
+        html += `<td class="gantt-bar-cell" style="${cellStyle}"></td>`;
+      }
+    });
+
+    html += '</tr>';
+  });
+
+  html += `</tbody></table></div>
+  <div class="gantt-legend">
+    <span><span class="swatch" style="background:#8BFF57"></span>Live — on track</span>
+    <span><span class="swatch" style="background:#F5A623"></span>At risk / Quote</span>
+    <span><span class="swatch" style="background:#FF4D4D"></span>Over budget</span>
+    <span style="color:var(--grey)">Bars run from job start date to due date. ● = today.</span>
+  </div>`;
+
+  document.getElementById('focusCal').innerHTML = html;
+}
+
 // ── FOCUS ──
 let focusWeeks = 1;
 
@@ -764,6 +927,7 @@ function renderFocusSidebar() {
 }
 
 function renderFocusCalendar() {
+  if (calView === 'gantt') { renderGantt(); return; }
   const today = new Date(); today.setHours(0,0,0,0);
   // Start Monday of current week
   const monday = new Date(today);
