@@ -69,6 +69,36 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
 /* JOB CARDS — Pipeline */
 .pipeline-grid{display:flex;flex-direction:column;gap:8px}
 
+/* OPPORTUNITIES TABLE */
+.opp-table{width:100%;border-collapse:collapse;font-size:12px}
+.opp-table th{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);padding:8px 14px;text-align:left;border-bottom:1.5px solid var(--border-strong);white-space:nowrap;user-select:none;cursor:pointer}
+.opp-table th:hover{color:var(--black)}
+.opp-table th.sorted{color:var(--black)}
+.opp-table th .sort-arrow{display:inline-block;margin-left:4px;opacity:.4;font-style:normal}
+.opp-table th.sorted .sort-arrow{opacity:1}
+.opp-table td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--black)}
+.opp-table tr:last-child td{border-bottom:none}
+.opp-table tbody tr:hover td{background:rgba(0,0,0,.018)}
+.opp-table tfoot td{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:11px 14px;border-top:2px solid var(--black);background:var(--grey-light)}
+.opp-table-wrap{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.opp-handler{display:flex;align-items:center;gap:8px}
+.opp-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;background:var(--black);color:var(--green)}
+.opp-avatar.jk{background:#4a5bca;color:#fff}
+.opp-avatar.cl{background:#e05c5c;color:#fff}
+.opp-avatar.ktw{background:#5acc30;color:#111}
+.opp-desc{font-weight:500;line-height:1.3}
+.opp-client{font-size:11px;color:var(--grey);margin-top:1px}
+.opp-pipeline{display:inline-block;font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;background:#FFF0D0;color:#8A4500;white-space:nowrap}
+.opp-pipeline.rtb{background:#e8f0ff;color:#2a4ab5}
+.opp-pipeline.pitch{background:#efe8ff;color:#5a2ab5}
+.opp-pipeline.rfi{background:#fff8e0;color:#8a5500}
+.opp-pipeline.nurture{background:#e8ffe8;color:#2a6000}
+.opp-pipeline.further{background:#f0e8ff;color:#6a2a9b}
+.opp-val{font-family:'DM Mono',monospace;font-size:11px;font-weight:500;text-align:right;white-space:nowrap}
+.opp-val.missing{color:var(--grey-mid);font-style:italic;font-weight:400}
+.opp-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);white-space:nowrap}
+.opp-product{font-size:11px;color:var(--grey)}
+
 .job-card{background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .12s; margin-bottom:10px;}
 .job-card:hover{border-color:var(--border-strong)}
 
@@ -247,6 +277,7 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="switchTab('pipeline',this)">Pipeline</button>
     <button class="nav-tab" onclick="switchTab('clients',this)">Existing clients</button>
+    <button class="nav-tab" onclick="switchTab('opportunities',this)">Opportunities</button>
     <button class="nav-tab" onclick="switchTab('focus',this)">Focus</button>
   </div>
   <div class="nav-right">
@@ -298,6 +329,24 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
     <div id="clientList"><div class="loading"><div class="spinner"></div><br>Connecting to Synergist…</div></div>
   </div>
 
+  <!-- OPPORTUNITIES PANEL -->
+  <div class="panel" id="panel-opportunities">
+    <div class="metrics" id="opp-metrics">
+      <div class="metric"><div class="metric-label">Loading</div><div class="metric-val">—</div></div>
+    </div>
+    <div class="controls">
+      <button class="pill active" onclick="setOppFilter('all',this)">All handlers</button>
+      <button class="pill" onclick="setOppFilter('Jade Raad',this)">JR</button>
+      <button class="pill" onclick="setOppFilter('Kitty Lewis-Williams',this)">KTW</button>
+      <button class="pill" onclick="setOppFilter('Coris Leachman',this)">CL</button>
+      <div class="search-wrap">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#111110" stroke-width="1.2"/><line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="#111110" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <input class="search" type="text" id="oppSearch" placeholder="Search opportunities…" oninput="renderOpportunities()">
+      </div>
+    </div>
+    <div id="opportunitiesList"><div class="loading"><div class="spinner"></div><br>Connecting to Synergist…</div></div>
+  </div>
+
   <!-- FOCUS PANEL -->
   <div class="panel" id="panel-focus">
     <div class="metrics" id="focus-metrics">
@@ -339,13 +388,13 @@ const EXCLUDE = new Set(["AGENCY INTERNAL - Non-Billable","MEDIA INTERNAL - Non-
 const EXCL_P = [" - Media","Media Cross-Platform","Website - Media"];
 function isInternal(n){ return EXCLUDE.has(n)||EXCL_P.some(p=>n.includes(p)); }
 
-let QUOTE_JOBS = [], LIVE_JOBS = [];
+let QUOTE_JOBS = [], LIVE_JOBS = [], OPP_JOBS = [];
 let ACTIVITIES = {};   // jobNumber -> [activities]
 let JOB_DETAILS = {};  // jobNumber -> detail object
 let openCards = new Set();
 let openClients = new Set();
 let openJobRows = new Set();
-let pipeFilter = 'all', clientFilter = 'all';
+let pipeFilter = 'all', clientFilter = 'all', oppFilter = 'all', oppSort = {col:'date',dir:'desc'};
 let currentTab = 'pipeline';
 
 // ── API ──
@@ -367,6 +416,30 @@ async function fetchAllJobs(){
   }
   return all;
 }
+
+async function fetchAllOpportunities(){
+  // Fetch using opportunitylist modelstructure which exposes jobSalesStatus and jobOppCurrentStatus
+  let all=[],page=1,total=null;
+  while(true){
+    const d = await syn("jobs.json",{modelstructure:"opportunitylist",rows:"200",page:String(page)});
+    all=all.concat(d.data);
+    if(total===null) total=d.totalrows;
+    if(all.length>=total) break;
+    page++;
+  }
+  return all;
+}
+
+// Active pipeline stages — matches the Synergist "Agency Opportunities" view exactly
+// Confirmed against live data: these 8 stages produce the same rows as the Synergist view
+const OPP_ACTIVE_STAGES = new Set([
+  'RTB','RTB & Pitch','RFI (Request for Info)',
+  'Further Development Req','Nurture/Future Opportunity',
+  'Headline Proposal','Negotiation/Feedback Loop',
+  'Presented & Awaiting Feedback'
+]);
+// Handlers shown in the "Agency Opportunities" view (KTW, JR, CL)
+const OPP_HANDLERS = new Set(['Kitty Lewis-Williams','Jade Raad','Coris Leachman']);
 
 // ── HELPERS ──
 function fmt(n){ if(!n||n===0) return null; return '£'+Number(n).toLocaleString('en-GB',{maximumFractionDigits:0}); }
@@ -411,10 +484,30 @@ async function loadAll(){
   document.getElementById('clientList').innerHTML='<div class="loading"><div class="spinner"></div><br>Fetching jobs…</div>';
 
   try{
-    const all = await fetchAllJobs();
+    const [all, allOpps] = await Promise.all([fetchAllJobs(), fetchAllOpportunities()]);
     const active = all.filter(j=>!j.jobCompleted&&!isInternal(j.jobClientName||''));
     QUOTE_JOBS = active.filter(j=>j.jobStatusDescription==='Quote');
     LIVE_JOBS  = active.filter(j=>j.jobStatusDescription==='Live');
+
+    // Filter opportunities to the "Agency Opportunities" view criteria
+    OPP_JOBS = allOpps.filter(j =>
+      (j.jobSalesStatus||'').startsWith('Open') &&
+      OPP_ACTIVE_STAGES.has(j.jobOppCurrentStatus||'') &&
+      OPP_HANDLERS.has(j.jobHandlerFullName||'')
+    );
+
+    // Enrich OPP_JOBS with custom fields from jobslist (1st Response date, Product Type)
+    // opportunitylist doesn't expose these — cross-reference by jobNumber
+    const jobsListByNum = {};
+    all.forEach(j => { jobsListByNum[j.jobNumber] = j; });
+    OPP_JOBS = OPP_JOBS.map(j => {
+      const match = jobsListByNum[j.jobNumber] || {};
+      return {
+        ...j,
+        jobCustomField18: match.jobCustomField18 || '',  // 1st Response by date
+        jobCustomField8:  match.jobCustomField8  || '',  // Product Type
+      };
+    });
 
     const now = new Date();
     document.getElementById('lastSync').textContent =
@@ -430,6 +523,8 @@ async function loadAll(){
     renderPipeline();
     renderClientMetrics();
     renderClients();
+    renderOppMetrics();
+    renderOpportunities();
 
   }catch(e){
     document.getElementById('pipelineList').innerHTML=`<div class="err">Could not load Synergist data.<br><small>${esc(e.message)}</small></div>`;
@@ -503,6 +598,142 @@ function setPipeFilter(f,el){
   document.querySelectorAll('#panel-pipeline .pill').forEach(b=>b.classList.remove('active'));
   el.classList.add('active');
   renderPipeline();
+}
+
+// ── OPPORTUNITIES ──
+
+function oppFiltered(){
+  const q=(document.getElementById('oppSearch')?.value||'').toLowerCase();
+  return OPP_JOBS.filter(j=>{
+    if(oppFilter!=='all'&&j.jobHandlerFullName!==oppFilter) return false;
+    if(!q) return true;
+    return (j.jobDescription1stLine||'').toLowerCase().includes(q)||
+           (j.jobClientName||'').toLowerCase().includes(q);
+  });
+}
+
+function oppStageCls(stage){
+  if(!stage) return '';
+  if(stage.startsWith('RTB & Pitch')) return 'pitch';
+  if(stage.startsWith('RTB')) return 'rtb';
+  if(stage.startsWith('RFI')) return 'rfi';
+  if(stage.startsWith('Nurture')) return 'nurture';
+  if(stage.startsWith('Further')) return 'further';
+  return '';
+}
+
+function handlerInitials(name){
+  if(!name) return '?';
+  const parts = name.trim().split(' ');
+  return parts.map(p=>p[0]).join('').slice(0,3).toUpperCase();
+}
+
+function handlerCls(name){
+  if(name==='Jade Raad') return 'jk';
+  if(name==='Coris Leachman') return 'cl';
+  if(name==='Kitty Lewis-Williams') return 'ktw';
+  return '';
+}
+
+function renderOppMetrics(){
+  const jobs = OPP_JOBS;
+  const total = jobs.length;
+  const totalVal = jobs.reduce((a,j)=>a+(j.jobQuotedPrice||0),0);
+  const withVal  = jobs.filter(j=>j.jobQuotedPrice>0).length;
+  const byStage  = {};
+  jobs.forEach(j=>{ const s=j.jobOppCurrentStatus||'Unknown'; byStage[s]=(byStage[s]||0)+1; });
+  const topStage = Object.entries(byStage).sort((a,b)=>b[1]-a[1])[0];
+  document.getElementById('opp-metrics').innerHTML=`
+    <div class="metric"><div class="metric-label">Open opportunities</div><div class="metric-val"><strong>${total}</strong></div><div class="metric-sub">Agency team pipeline</div></div>
+    <div class="metric"><div class="metric-label">Total quoted</div><div class="metric-val"><strong class="g">${totalVal>0?fmt(totalVal):'—'}</strong></div><div class="metric-sub">${withVal} of ${total} have values</div></div>
+    <div class="metric"><div class="metric-label">Top stage</div><div class="metric-val"><strong>${topStage?topStage[0]:'—'}</strong></div><div class="metric-sub">${topStage?topStage[1]+' opportunities':''}</div></div>
+    <div class="metric"><div class="metric-label">Handlers</div><div class="metric-val"><strong>${[...OPP_HANDLERS].map(h=>handlerInitials(h)).join(' · ')}</strong></div><div class="metric-sub">Jade · Kitty · Coris</div></div>`;
+}
+
+function setOppSort(col){
+  if(oppSort.col===col) oppSort.dir=oppSort.dir==='desc'?'asc':'desc';
+  else oppSort={col,dir:'asc'};
+  renderOpportunities();
+}
+
+function renderOpportunities(){
+  const el = document.getElementById('opportunitiesList');
+  if(!el) return;
+  const jobs = oppFiltered();
+
+  if(!jobs.length){
+    el.innerHTML='<div class="empty">No opportunities match.</div>';
+    return;
+  }
+
+  // Sort
+  const sorted = [...jobs].sort((a,b)=>{
+    let va,vb;
+    if(oppSort.col==='date'){
+      va=a.jobCustomField18||'0000';vb=b.jobCustomField18||'0000';
+    } else if(oppSort.col==='value'){
+      va=a.jobQuotedPrice||0;vb=b.jobQuotedPrice||0;
+    } else if(oppSort.col==='desc'){
+      va=a.jobDescription1stLine||'';vb=b.jobDescription1stLine||'';
+    } else if(oppSort.col==='stage'){
+      va=a.jobOppCurrentStatus||'';vb=b.jobOppCurrentStatus||'';
+    } else if(oppSort.col==='handler'){
+      va=a.jobHandlerFullName||'';vb=b.jobHandlerFullName||'';
+    }
+    const cmp = typeof va==='number'?va-vb:va.localeCompare(vb);
+    return oppSort.dir==='desc'?-cmp:cmp;
+  });
+
+  const arrow = (col) => {
+    const active = oppSort.col===col;
+    return `<i class="sort-arrow">${active?(oppSort.dir==='desc'?'↓':'↑'):'↕'}</i>`;
+  };
+
+  const totalVal = sorted.reduce((a,j)=>a+(j.jobQuotedPrice||0),0);
+
+  el.innerHTML=`<div class="opp-table-wrap"><table class="opp-table">
+    <thead><tr>
+      <th onclick="setOppSort('handler')" class="${oppSort.col==='handler'?'sorted':''}">Handler ${arrow('handler')}</th>
+      <th onclick="setOppSort('desc')" class="${oppSort.col==='desc'?'sorted':''}">Description ${arrow('desc')}</th>
+      <th onclick="setOppSort('stage')" class="${oppSort.col==='stage'?'sorted':''}">Pipeline ${arrow('stage')}</th>
+      <th onclick="setOppSort('date')" class="${oppSort.col==='date'?'sorted':''}">1st Response by ${arrow('date')}</th>
+      <th>Product type</th>
+      <th onclick="setOppSort('value')" class="${oppSort.col==='value'?'sorted':''}" style="text-align:right">Quoted ${arrow('value')}</th>
+    </tr></thead>
+    <tbody>
+    ${sorted.map(j => {
+      const initials = handlerInitials(j.jobHandlerFullName||'');
+      const hCls     = handlerCls(j.jobHandlerFullName||'');
+      const stageCls = oppStageCls(j.jobOppCurrentStatus||'');
+      const val      = j.jobQuotedPrice>0 ? fmt(j.jobQuotedPrice) : null;
+      const dateStr  = fmtDate(j.jobCustomField18);   // 1st Response by
+      const product  = j.jobCustomField8 || '—';       // Product Type
+      return `<tr>
+        <td><div class="opp-handler">
+          <div class="opp-avatar ${hCls}">${esc(initials)}</div>
+          <span style="font-size:11px;color:var(--grey)">${esc(j.jobHandlerFullName||'—')}</span>
+        </div></td>
+        <td><div class="opp-desc">${esc(j.jobDescription1stLine||'—')}</div>
+            <div class="opp-client">${esc(j.jobClientName||'')}</div></td>
+        <td><span class="opp-pipeline ${stageCls}">${esc(j.jobOppCurrentStatus||'—')}</span></td>
+        <td><span class="opp-date">${dateStr||'—'}</span></td>
+        <td><span class="opp-product">${esc(product)}</span></td>
+        <td class="opp-val ${val?'':'missing'}">${val||'—'}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+    <tfoot><tr>
+      <td colspan="5" style="text-align:right">Grand total</td>
+      <td style="text-align:right">${totalVal>0?fmt(totalVal):'—'}</td>
+    </tr></tfoot>
+  </table></div>`;
+}
+
+function setOppFilter(f,el){
+  oppFilter=f;
+  document.querySelectorAll('#panel-opportunities .pill').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderOpportunities();
 }
 
 // ── CLIENTS ──
@@ -714,6 +945,7 @@ function switchTab(tab, el){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   if(tab==='focus') renderFocus();
+  if(tab==='opportunities'){ renderOppMetrics(); renderOpportunities(); }
 }
 
 
