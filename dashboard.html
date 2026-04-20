@@ -651,52 +651,35 @@ function setPipeFilter(f,el){
 }
 
 // ── HUBSPOT — FRESH ENQUIRIES ──
+// Data is cached in Supabase (hubspot_enquiries table).
+// Reads from Supabase instead of HubSpot directly to avoid CORS errors.
 
-const HS_TOKEN   = ['pat-eu1-ea39dfd6','7ffd-47fa','b0af-e18a555b2156'].join('-');
-const HS_FORM_ID = 'ed6ccba9-015b-4fc5-89c2-331794e1a3c6';
+const SUPA_URL = 'https://iehkvlyjumkzccoqqgxl.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImllaGt2bHlqdW1remNjb3FxZ3hsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4MTMwNzYsImV4cCI6MjA5MTM4OTA3Nn0.pF9K9aBwWN10JRT_ODTLPzsdPKH3X0CW30WrPMn9lGs';
 
-let ENQ_JOBS    = [];  // all persona_1 form submissions
-let enqWindow   = 30;  // days to show by default
+let ENQ_JOBS    = [];
+let enqWindow   = 30;
 let enqLoaded   = false;
-let expandedEnq = new Set(); // conversionIds currently expanded
+let expandedEnq = new Set();
 
 async function fetchEnquiries() {
   if (enqLoaded) return;
-  const all = [];
-  let after = null;
-  while (true) {
-    const qs = new URLSearchParams({ limit: '50' });
-    if (after) qs.set('after', after);
-    const r = await fetch(
-      `https://api.hubapi.com/form-integrations/v1/submissions/forms/${HS_FORM_ID}?${qs}`,
-      { headers: { Authorization: `Bearer ${HS_TOKEN}` } }
-    );
-    if (!r.ok) throw new Error(`HubSpot ${r.status}`);
-    const d = await r.json();
-    all.push(...(d.results || []));
-    after = d.paging?.next?.after;
-    if (!after || !d.results?.length) break;
-  }
-  // Flatten values array → object, filter to persona_1 only
-  ENQ_JOBS = all
-    .filter(s => {
-      const v = Object.fromEntries(s.values.map(x => [x.name, x.value]));
-      return v.hs_persona === 'persona_1';
-    })
-    .map(s => {
-      const v = Object.fromEntries(s.values.map(x => [x.name, x.value]));
-      return {
-        id:        s.conversionId,
-        submittedAt: s.submittedAt,
-        firstname: v.firstname || '',
-        lastname:  v.lastname  || '',
-        email:     v.email     || '',
-        phone:     v.phone     || '',
-        company:   v.company   || '',
-        message:   v.message   || '',
-      };
-    })
-    .sort((a, b) => b.submittedAt - a.submittedAt);
+  const r = await fetch(
+    `${SUPA_URL}/rest/v1/hubspot_enquiries?select=*&order=submitted_at.desc&limit=500`,
+    { headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` } }
+  );
+  if (!r.ok) throw new Error(`Supabase ${r.status}`);
+  const rows = await r.json();
+  ENQ_JOBS = rows.map(row => ({
+    id:          row.id,
+    submittedAt: new Date(row.submitted_at).getTime(),
+    firstname:   row.firstname || '',
+    lastname:    row.lastname  || '',
+    email:       row.email     || '',
+    phone:       row.phone     || '',
+    company:     row.company   || '',
+    message:     row.message   || '',
+  }));
   enqLoaded = true;
 }
 
