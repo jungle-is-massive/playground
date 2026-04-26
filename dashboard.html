@@ -960,8 +960,11 @@ function setOppFilter(f,el){
 
 // ── CLIENTS ──
 function renderClientMetrics(){
-  const bdLive=LIVE_JOBS.filter(isBrandDirect);
-  const bdQuote=QUOTE_JOBS.filter(isBrandDirect);
+  // Scope metrics to clients with at least one Brand Direct Project job
+  const allPool=[...LIVE_JOBS,...QUOTE_JOBS];
+  const bdClientSet=new Set(allPool.filter(j=>j.jobJobtypeDescription==='Brand Direct Project').map(j=>j.jobClientName));
+  const bdLive=LIVE_JOBS.filter(j=>bdClientSet.has(j.jobClientName));
+  const bdQuote=QUOTE_JOBS.filter(j=>bdClientSet.has(j.jobClientName));
   const allBD=[...bdLive,...bdQuote];
   const clients=new Set(allBD.map(j=>j.jobClientName)).size;
   const live=bdLive.length;
@@ -983,8 +986,13 @@ function isBrandDirect(j){ return BRAND_DIRECT_TYPES.has(j.jobJobtypeDescription
 function clientFiltered(){
   const q=(document.getElementById('clientSearch').value||'').toLowerCase();
   const byClient={};
-  // Only include jobs where the job type is Brand Direct or Brand Partnership
-  const ALL_CLIENT_JOBS = [...LIVE_JOBS, ...QUOTE_JOBS].filter(isBrandDirect);
+  // Only show clients that have at least one Brand Direct Project job
+  // (clients whose jobs are exclusively Brand Partnership Project are excluded)
+  const ALL_JOBS_POOL = [...LIVE_JOBS, ...QUOTE_JOBS];
+  const brandDirectClients = new Set(
+    ALL_JOBS_POOL.filter(j=>j.jobJobtypeDescription==='Brand Direct Project').map(j=>j.jobClientName)
+  );
+  const ALL_CLIENT_JOBS = ALL_JOBS_POOL.filter(j=>brandDirectClients.has(j.jobClientName));
   ALL_CLIENT_JOBS.forEach(j=>{
     const tt=termType(j);
     if(clientFilter!=='all'&&tt!==clientFilter) return;
