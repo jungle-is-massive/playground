@@ -392,7 +392,6 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
       <button class="pill active" onclick="setClientFilter('all',this)">All</button>
       <button class="pill" onclick="setClientFilter('Retainer',this)">Retainers</button>
       <button class="pill" onclick="setClientFilter('Campaign',this)">Campaigns</button>
-      <button class="pill" onclick="setClientFilter('Brand Direct Project',this)">Brand Direct</button>
       <button class="pill" onclick="setClientFilter('(blank)',this)">Untagged</button>
       <div class="search-wrap">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="6" cy="6" r="4.5" stroke="#111110" stroke-width="1.2"/><line x1="9.5" y1="9.5" x2="12.5" y2="12.5" stroke="#111110" stroke-width="1.2" stroke-linecap="round"/></svg>
@@ -961,12 +960,14 @@ function setOppFilter(f,el){
 
 // ── CLIENTS ──
 function renderClientMetrics(){
-  const allClientJobs=[...LIVE_JOBS,...QUOTE_JOBS].filter(j=>!isInternal(j.jobClientName||''));
-  const live=LIVE_JOBS.length;
-  const quotes=QUOTE_JOBS.length;
-  const clients=new Set(allClientJobs.map(j=>j.jobClientName)).size;
-  const over=LIVE_JOBS.filter(j=>parseInt(j.jobThermProgress)>=100).length;
-  const atRisk=LIVE_JOBS.filter(j=>{const p=parseInt(j.jobThermProgress);return p>=85&&p<100;}).length;
+  const bdLive=LIVE_JOBS.filter(isBrandDirect);
+  const bdQuote=QUOTE_JOBS.filter(isBrandDirect);
+  const allBD=[...bdLive,...bdQuote];
+  const clients=new Set(allBD.map(j=>j.jobClientName)).size;
+  const live=bdLive.length;
+  const quotes=bdQuote.length;
+  const over=bdLive.filter(j=>parseInt(j.jobThermProgress)>=100).length;
+  const atRisk=bdLive.filter(j=>{const p=parseInt(j.jobThermProgress);return p>=85&&p<100;}).length;
 
   document.getElementById('client-metrics').innerHTML=`
     <div class="metric"><div class="metric-label">Clients</div><div class="metric-val"><strong>${clients}</strong></div><div class="metric-sub">with active jobs</div></div>
@@ -975,11 +976,15 @@ function renderClientMetrics(){
     <div class="metric"><div class="metric-label">Over budget</div><div class="metric-val"><strong class="${over>0?'r':'g'}">${over}</strong></div><div class="metric-sub">${atRisk} approaching limit</div></div>`;
 }
 
+const BRAND_DIRECT_TYPES = new Set(['Brand Direct Project','Brand Partnership Project']);
+
+function isBrandDirect(j){ return BRAND_DIRECT_TYPES.has(j.jobJobtypeDescription||''); }
+
 function clientFiltered(){
   const q=(document.getElementById('clientSearch').value||'').toLowerCase();
   const byClient={};
-  // Include both live and quote jobs per client for full picture
-  const ALL_CLIENT_JOBS = [...LIVE_JOBS, ...QUOTE_JOBS];
+  // Only include jobs where the job type is Brand Direct or Brand Partnership
+  const ALL_CLIENT_JOBS = [...LIVE_JOBS, ...QUOTE_JOBS].filter(isBrandDirect);
   ALL_CLIENT_JOBS.forEach(j=>{
     const tt=termType(j);
     if(clientFilter!=='all'&&tt!==clientFilter) return;
