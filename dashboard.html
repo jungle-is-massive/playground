@@ -1163,7 +1163,7 @@ document.addEventListener('click', async function(e){
 function switchTab(tab, el){
   currentTab=tab;
   document.querySelectorAll('.nav-tab').forEach(b=>b.classList.remove('active'));
-  el.classList.add('active');
+  if(el) el.classList.add('active');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
   if(tab==='focus') renderFocus();
@@ -1172,7 +1172,24 @@ function switchTab(tab, el){
     // Pre-fetch HubSpot in background so it's ready when user clicks the sub-tab
     if(!enqLoaded) fetchEnquiries().catch(()=>{});
   }
+  history.replaceState(null,'','#'+tab);
 }
+
+// Hash routing
+(function initHash_switchTab(){
+  const validTabs = ['pipeline','clients','opportunities','focus'];
+  const trySwitch = (hash, attempts) => {
+    const btn = document.querySelector(`.nav-tab[onclick*="'${hash}'"]`);
+    if(btn){ switchTab(hash, btn); }
+    else if(attempts > 0){ setTimeout(()=>trySwitch(hash, attempts-1), 200); }
+  };
+  const hash = window.location.hash.replace('#','');
+  if(validTabs.includes(hash)) setTimeout(()=>trySwitch(hash, 20), 300);
+  window.addEventListener('hashchange', () => {
+    const h = window.location.hash.replace('#','');
+    if(validTabs.includes(h)) trySwitch(h, 10);
+  });
+})();
 
 
 
