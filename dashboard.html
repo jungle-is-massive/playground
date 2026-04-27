@@ -90,7 +90,9 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
 .enq-co{font-size:12px;font-weight:500}
 .enq-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--grey);white-space:nowrap}
 .enq-preview{font-size:12px;color:var(--grey);max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.enq-expand{display:none;padding:10px 14px 14px;background:#f9f8f5;border-top:1px solid var(--border);font-size:12px;line-height:1.65;color:#333;white-space:pre-wrap;word-break:break-word}
+.enq-expand{padding:10px 14px 14px;background:#f9f8f5;border-top:1px solid var(--border);font-size:12px;line-height:1.65;color:#333;white-space:pre-wrap;word-break:break-word}
+.enq-action-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;white-space:normal}
+.enq-bd-section{margin-top:10px;padding-top:10px;border-top:1px solid var(--border);white-space:normal}
 .enq-badge{display:inline-block;font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;background:#D8FFB8;color:#2A6000;white-space:nowrap;font-family:'DM Mono',monospace;letter-spacing:.06em}
 .enq-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .enq-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--grey);margin-left:auto}
@@ -856,26 +858,37 @@ function renderEnquiries() {
       const isOpen  = expandedEnq.has(e.id);
       const preview = e.message.replace(/\n/g,' ').slice(0,120);
       return `
-        <tr class="${isOpen?'expanded':''}" onclick="toggleEnq('${e.id}')">
+        <tr class="${isOpen?'expanded':''} ${e.bdFlagged?'bd-flagged-row':''}" onclick="toggleEnq('${e.id}')">
           <td><span class="enq-date">${dateStr}<br><span style="font-size:10px;color:var(--grey)">${timeStr}</span></span></td>
           <td><div class="enq-name">${esc(e.firstname)} ${esc(e.lastname)}</div>
               <div class="enq-email">${esc(e.email)}</div></td>
-          <td><div class="enq-co">${esc(e.company)||'—'}</div></td>
-          <td style="font-size:11px;color:var(--grey)">${esc(e.phone)||'—'}</td>
-          <td><div class="enq-preview" title="${esc(e.message)}">${esc(preview)}${e.message.length>120?'…':''}</div></td>
+          <td><div class="enq-co">${esc(e.company)||'\u2014'}</div></td>
+          <td style="font-size:11px;color:var(--grey)">${esc(e.phone)||'\u2014'}</td>
+          <td><div class="enq-preview" title="${esc(e.message)}">${esc(preview)}${e.message.length>120?'\u2026':''}</div></td>
+          <td style="text-align:center">
+            <button class="flag-btn ${e.bdFlagged?'flagged':''}" onclick="toggleBdFlag('${e.id}',${e.bdFlagged},event)" title="${e.bdFlagged?'Remove BD flag':'Flag as BD opportunity'}">\u2605</button>
+          </td>
         </tr>
         ${isOpen ? `<tr class="expanded">
-          <td colspan="5">
-            <div class="enq-expand">${esc(e.message)}
-              <div style="margin-top:10px;display:flex;gap:8px">
-                <a href="mailto:${esc(e.email)}" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">✉ Reply</a>
-                ${e.phone?`<a href="tel:${esc(e.phone)}" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">📞 Call</a>`:''}
+          <td colspan="6">
+            <div class="enq-expand">
+              <div style="white-space:pre-wrap;word-break:break-word;margin-bottom:10px">${esc(e.message)}</div>
+              <div class="enq-action-row">
+                <a href="mailto:${esc(e.email)}" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">\u2709 Reply</a>
+                ${e.phone?\`<a href="tel:${esc(e.phone)}" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">\u260e Call</a>\`:''}
+                <button class="flag-btn ${e.bdFlagged?'flagged':''}" onclick="toggleBdFlag('${e.id}',${e.bdFlagged},event)">${e.bdFlagged?'\u2605 BD flagged':'\u2606 Flag as BD'}</button>
+              </div>
+              <div class="enq-bd-section">
+                <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--grey);margin-bottom:5px">BD Notes</div>
+                <textarea class="bd-notes-input" id="bd-notes-${e.id}" rows="2" placeholder="Why is this interesting? What\u2019s the next step?" onclick="event.stopPropagation()">${esc(e.bdNotes)}</textarea>
+                <div style="margin-top:5px">
+                  <button style="font-size:11px;font-weight:700;padding:4px 12px;border:1px solid var(--border-strong);border-radius:20px;background:none;cursor:pointer;font-family:inherit" onclick="saveBdNotes('${e.id}',event)">Save note</button>
+                </div>
               </div>
             </div>
           </td>
         </tr>` : ''}
-      `;
-    }).join('')}
+      `;}).join('')}
     </tbody>
   </table></div>`;
 }
