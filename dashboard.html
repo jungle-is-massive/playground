@@ -95,6 +95,25 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
 .enq-filter-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
 .enq-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--grey);margin-left:auto}
 
+.flag-btn {
+  background: none; border: 1px solid var(--border); border-radius: 6px;
+  padding: 3px 7px; cursor: pointer; font-size: 13px; line-height: 1;
+  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.flag-btn:hover { transform: scale(1.15); }
+.flag-btn.flagged { background: #fff8e1; border-color: #f0b429; }
+.flag-btn.flagged::after { content: ' BD'; font-size: 8px; font-weight: 700;
+  letter-spacing: 0.06em; color: #8a6000; vertical-align: middle; }
+.bd-notes-input {
+  width: 100%; padding: 5px 8px; border: 1px solid var(--border);
+  border-radius: 6px; font-size: 11px; font-family: inherit;
+  background: var(--surface); color: var(--black); margin-top: 6px;
+  resize: none; transition: border-color 0.2s;
+}
+.bd-notes-input:focus { outline: none; border-color: var(--black); }
+tr.bd-flagged-row > td:first-child { border-left: 3px solid #f0b429; }
+
 /* OPPORTUNITIES TABLE */
 .opp-table{width:100%;border-collapse:collapse;font-size:12px}
 .opp-table th{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--grey);padding:8px 14px;text-align:left;border-bottom:1.5px solid var(--border-strong);white-space:nowrap;user-select:none;cursor:pointer}
@@ -725,8 +744,67 @@ async function fetchEnquiries() {
     phone:       row.phone     || '',
     company:     row.company   || '',
     message:     row.message   || '',
+    bdFlagged:   row.bd_flagged || false,
+    bdNotes:     row.bd_notes  || '',
   }));
   enqLoaded = true;
+}
+
+async function toggleBdFlag(id, currentFlag, event) {
+  event.stopPropagation();
+  const newFlag = !currentFlag;
+  const nowIso = newFlag ? new Date().toISOString() : null;
+  // Optimistic update in memory
+  const item = ENQ_JOBS.find(e => e.id === id);
+  if (item) { item.bdFlagged = newFlag; item.bdFlaggedAt = nowIso; }
+  renderEnquiries();
+  // Persist to Supabase
+  try {
+    const r = await fetch(
+      `${SUPA_URL}/rest/v1/hubspot_enquiries?id=eq.${encodeURIComponent(id)}`,
+      {
+        method: 'PATCH',
+        headers: {
+          apikey: SUPA_KEY,
+          Authorization: `Bearer ${SUPA_KEY}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal'
+        },
+        body: JSON.stringify({ bd_flagged: newFlag, bd_flagged_at: nowIso })
+      }
+    );
+    if (!r.ok) throw new Error(`Supabase PATCH ${r.status}`);
+  } catch(e) {
+    // Revert on failure
+    if (item) { item.bdFlagged = currentFlag; }
+    renderEnquiries();
+    alert('Could not save — check your connection.');
+  }
+}
+
+async function saveBdNotes(id, event) {
+  event.stopPropagation();
+  const input = document.getElementById(`bd-notes-${id}`);
+  if (!input) return;
+  const notes = input.value.trim();
+  const item = ENQ_JOBS.find(e => e.id === id);
+  if (item) item.bdNotes = notes;
+  input.style.borderColor = 'var(--grey)';
+  await fetch(
+    `${SUPA_URL}/rest/v1/hubspot_enquiries?id=eq.${encodeURIComponent(id)}`,
+    {
+      method: 'PATCH',
+      headers: {
+        apikey: SUPA_KEY,
+        Authorization: `Bearer ${SUPA_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=minimal'
+      },
+      body: JSON.stringify({ bd_notes: notes })
+    }
+  );
+  input.style.borderColor = '#4caf50';
+  setTimeout(() => { if(input) input.style.borderColor = 'var(--grey)'; }, 1200);
 }
 
 function enqFiltered() {
@@ -768,6 +846,7 @@ function renderEnquiries() {
       <th>Company</th>
       <th>Contact</th>
       <th>Message preview</th>
+      <th style="text-align:center">BD</th>
     </tr></thead>
     <tbody>
     ${items.map(e => {
@@ -1534,3 +1613,4 @@ loadAll();
 </script>
 </body>
 </html>
+
