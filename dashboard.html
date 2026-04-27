@@ -98,15 +98,13 @@ nav{position:sticky;top:0;z-index:300;background:var(--black);display:flex;align
 .enq-count{font-family:'DM Mono',monospace;font-size:10px;color:var(--grey);margin-left:auto}
 
 .flag-btn {
-  background: none; border: 1px solid var(--border); border-radius: 6px;
-  padding: 3px 7px; cursor: pointer; font-size: 13px; line-height: 1;
-  transition: background 0.15s, border-color 0.15s, transform 0.1s;
+  background: none; border: 1px solid transparent; border-radius: 6px;
+  padding: 3px 7px; cursor: pointer; font-size: 14px; line-height: 1;
+  color: #ccc; transition: color 0.15s, background 0.15s, transform 0.1s;
   flex-shrink: 0;
 }
-.flag-btn:hover { transform: scale(1.15); }
-.flag-btn.flagged { background: #fff8e1; border-color: #f0b429; }
-.flag-btn.flagged::after { content: ' BD'; font-size: 8px; font-weight: 700;
-  letter-spacing: 0.06em; color: #8a6000; vertical-align: middle; }
+.flag-btn:hover { color: #f0b429; transform: scale(1.15); }
+.flag-btn.flagged { color: #f0b429; background: #fff8e1; border-color: #f0b429; }
 .bd-notes-input {
   width: 100%; padding: 5px 8px; border: 1px solid var(--border);
   border-radius: 6px; font-size: 11px; font-family: inherit;
@@ -838,70 +836,85 @@ function toggleEnq(id) {
 }
 
 function enqExpandedHtml(e) {
-  const phone = e.phone
+  var safeId  = String(e.id).replace(/'/g, "\\'");
+  var phone   = e.phone
     ? '<a href="tel:' + esc(e.phone) + '" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">&#128222; Call</a>'
     : '';
-  const flagLabel = e.bdFlagged ? '&#9733; BD flagged' : '&#9734; Flag as BD';
-  const flagClass = e.bdFlagged ? 'flag-btn flagged' : 'flag-btn';
-  return [
+  var flagLabel = e.bdFlagged ? '&#9733; BD flagged' : '&#9734; Flag as BD';
+  var flagClass = e.bdFlagged ? 'flag-btn flagged' : 'flag-btn';
+  var parts = [
     '<tr class="expanded">',
-      '<td colspan="6">',
-        '<div class="enq-expand">',
-          '<div style="white-space:pre-wrap;word-break:break-word;margin-bottom:10px">' + esc(e.message) + '</div>',
-          '<div class="enq-action-row">',
-            '<a href="mailto:' + esc(e.email) + '" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">&#9993; Reply</a>',
-            phone,
-            '<button class="' + flagClass + '" onclick="toggleBdFlag(' + JSON.stringify(e.id) + ',' + e.bdFlagged + ',event)">' + flagLabel + '</button>',
-          '</div>',
-          '<div class="enq-bd-section">',
-            '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--grey);margin-bottom:5px">BD Notes</div>',
-            '<textarea class="bd-notes-input" id="bd-notes-' + esc(e.id) + '" rows="2" placeholder="Why is this interesting? What is the next step?" onclick="event.stopPropagation()">' + esc(e.bdNotes) + '</textarea>',
-            '<div style="margin-top:5px">',
-              '<button style="font-size:11px;font-weight:700;padding:4px 12px;border:1px solid var(--border-strong);border-radius:20px;background:none;cursor:pointer;font-family:inherit" onclick="saveBdNotes(' + JSON.stringify(e.id) + ',event)">Save note</button>',
-            '</div>',
-          '</div>',
-        '</div>',
-      '</td>',
+    '<td colspan="6">',
+    '<div class="enq-expand">',
+    '<div style="white-space:pre-wrap;word-break:break-word;margin-bottom:10px">' + esc(e.message) + '</div>',
+    '<div class="enq-action-row">',
+    '<a href="mailto:' + esc(e.email) + '" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">&#9993; Reply</a>',
+    phone,
+    '<button class="' + flagClass + '" onclick="toggleBdFlag(\'' + safeId + '\',' + e.bdFlagged + ',event)">' + flagLabel + '</button>',
+    '</div>',
+    '<div class="enq-bd-section">',
+    '<div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--grey);margin-bottom:5px">BD Notes</div>',
+    '<textarea class="bd-notes-input" id="bd-notes-' + safeId + '" rows="2" placeholder="Why is this interesting? What is the next step?" onclick="event.stopPropagation()">' + esc(e.bdNotes) + '</textarea>',
+    '<div style="margin-top:5px">',
+    '<button style="font-size:11px;font-weight:700;padding:4px 12px;border:1px solid var(--border-strong);border-radius:20px;background:none;cursor:pointer;font-family:inherit" onclick="saveBdNotes(\'' + safeId + '\',event)">Save note</button>',
+    '</div>',
+    '</div>',
+    '</div>',
+    '</td>',
     '</tr>'
-  ].join('');
+  ];
+  return parts.join('');
 }
 
 function renderEnquiries() {
-  const el = document.getElementById('enquiriesList');
+  var el = document.getElementById('enquiriesList');
   if (!el) return;
-  const items = enqFiltered();
+  var items = enqFiltered();
   document.getElementById('enq-count').textContent = items.length + ' enquir' + (items.length === 1 ? 'y' : 'ies');
   if (!items.length) {
     el.innerHTML = '<div class="empty">No enquiries in this period.</div>';
     return;
   }
 
-  const rows = items.map(function(e) {
-    const dt = new Date(e.submittedAt);
-    const dateStr = dt.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'2-digit'});
-    const timeStr = dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
-    const isOpen  = expandedEnq.has(e.id);
-    const preview = e.message.replace(/\n/g,' ').slice(0,120);
-    const flagClass = 'flag-btn' + (e.bdFlagged ? ' flagged' : '');
-    const rowClass  = 'expanded bd-flagged-row'.split(' ').filter(function(c) {
-      return (c === 'expanded' && isOpen) || (c === 'bd-flagged-row' && e.bdFlagged);
-    }).join(' ');
+  var rows = items.map(function(e) {
+    var safeId  = String(e.id).replace(/'/g, "\\'");
+    var dt      = new Date(e.submittedAt);
+    var dateStr = dt.toLocaleDateString('en-GB', {day:'numeric', month:'short', year:'2-digit'});
+    var timeStr = dt.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+    var isOpen  = expandedEnq.has(e.id);
+    var preview = e.message.replace(/\n/g,' ').slice(0,120);
 
-    const mainRow = [
-      '<tr class="' + rowClass + '" onclick="toggleEnq(' + JSON.stringify(e.id) + ')">',
-        '<td><span class="enq-date">' + dateStr + '<br><span style="font-size:10px;color:var(--grey)">' + timeStr + '</span></span></td>',
-        '<td><div class="enq-name">' + esc(e.firstname) + ' ' + esc(e.lastname) + '</div><div class="enq-email">' + esc(e.email) + '</div></td>',
-        '<td><div class="enq-co">' + (esc(e.company) || '&mdash;') + '</div></td>',
-        '<td style="font-size:11px;color:var(--grey)">' + (esc(e.phone) || '&mdash;') + '</td>',
-        '<td><div class="enq-preview" title="' + esc(e.message) + '">' + esc(preview) + (e.message.length > 120 ? '&hellip;' : '') + '</div></td>',
-        '<td style="text-align:center"><button class="' + flagClass + '" onclick="toggleBdFlag(' + JSON.stringify(e.id) + ',' + e.bdFlagged + ',event)" title="' + (e.bdFlagged ? 'Remove BD flag' : 'Flag as BD opportunity') + '">&#9733;</button></td>',
+    var rowClasses = [];
+    if (isOpen)       rowClasses.push('expanded');
+    if (e.bdFlagged)  rowClasses.push('bd-flagged-row');
+
+    var starChar  = e.bdFlagged ? '&#9733;' : '&#9734;';
+    var starClass = e.bdFlagged ? 'flag-btn flagged' : 'flag-btn';
+    var starTitle = e.bdFlagged ? 'Remove BD flag' : 'Flag as BD opportunity';
+
+    var mainRow = [
+      '<tr class="' + rowClasses.join(' ') + '" onclick="toggleEnq(\'' + safeId + '\')">',
+      '<td><span class="enq-date">' + dateStr + '<br><span style="font-size:10px;color:var(--grey)">' + timeStr + '</span></span></td>',
+      '<td><div class="enq-name">' + esc(e.firstname) + ' ' + esc(e.lastname) + '</div><div class="enq-email">' + esc(e.email) + '</div></td>',
+      '<td><div class="enq-co">' + (esc(e.company) || '&mdash;') + '</div></td>',
+      '<td style="font-size:11px;color:var(--grey)">' + (esc(e.phone) || '&mdash;') + '</td>',
+      '<td><div class="enq-preview" title="' + esc(e.message) + '">' + esc(preview) + (e.message.length > 120 ? '&hellip;' : '') + '</div></td>',
+      '<td style="text-align:center"><button class="' + starClass + '" onclick="toggleBdFlag(\'' + safeId + '\',' + e.bdFlagged + ',event)" title="' + starTitle + '">' + starChar + '</button></td>',
       '</tr>'
     ].join('');
 
     return mainRow + (isOpen ? enqExpandedHtml(e) : '');
   });
 
-  el.innerHTML = '<div class="enq-table-wrap"><table class="enq-table"><thead><tr><th>Date</th><th>Name</th><th>Company</th><th>Contact</th><th>Message preview</th><th style="text-align:center">BD</th></tr></thead><tbody>' + rows.join('') + '</tbody></table></div>';
+  el.innerHTML = [
+    '<div class="enq-table-wrap"><table class="enq-table">',
+    '<thead><tr>',
+    '<th>Date</th><th>Name</th><th>Company</th><th>Contact</th><th>Message preview</th>',
+    '<th style="text-align:center">BD</th>',
+    '</tr></thead>',
+    '<tbody>' + rows.join('') + '</tbody>',
+    '</table></div>'
+  ].join('');
 }
 
 // Sub-tab switcher within Opportunities panel
