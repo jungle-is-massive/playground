@@ -522,10 +522,14 @@ async function syn(endpoint, params){
   return r.json();
 }
 
+async function fetchWithTimeout(promise, ms=12000) {
+  return Promise.race([promise, new Promise((_,rej) => setTimeout(() => rej(new Error('Synergist timed out — it may be down. Try refreshing in a few minutes.')), ms))]);
+}
+
 async function fetchAllJobs(){
   let all=[],page=1,total=null;
   while(true){
-    const d = await syn("jobs.json",{modelstructure:"jobslist",style:"modeldata",rows:"200",page:String(page)});
+    const d = await fetchWithTimeout(syn("jobs.json",{modelstructure:"jobslist",style:"modeldata",rows:"200",page:String(page)}));
     all=all.concat(d.data);
     if(total===null) total=d.totalrows;
     if(all.length>=total) break;
@@ -644,8 +648,9 @@ async function loadAll(){
     renderOpportunities();
 
   }catch(e){
-    document.getElementById('pipelineList').innerHTML=`<div class="err">Could not load Synergist data.<br><small>${esc(e.message)}</small></div>`;
-    document.getElementById('clientList').innerHTML=`<div class="err">Could not load Synergist data.<br><small>${esc(e.message)}</small></div>`;
+    const errMsg = `<div class="err" style="padding:24px;text-align:center"><div style="font-size:15px;font-weight:600;margin-bottom:6px">Synergist unavailable</div><div style="font-size:12px;color:#666;margin-bottom:12px">${esc(e.message)}</div><button onclick="loadAll()" style="font-size:12px;font-weight:700;padding:6px 16px;border:1px solid #ccc;border-radius:20px;background:none;cursor:pointer">Try again</button></div>`;
+    document.getElementById('pipelineList').innerHTML = errMsg;
+    document.getElementById('clientList').innerHTML = errMsg;
   }finally{
     btn.disabled=false; btn.textContent='↻ Refresh';
   }
@@ -862,33 +867,16 @@ function renderEnquiries() {
           <td><span class="enq-date">${dateStr}<br><span style="font-size:10px;color:var(--grey)">${timeStr}</span></span></td>
           <td><div class="enq-name">${esc(e.firstname)} ${esc(e.lastname)}</div>
               <div class="enq-email">${esc(e.email)}</div></td>
-          <td><div class="enq-co">${esc(e.company)||'\u2014'}</div></td>
-          <td style="font-size:11px;color:var(--grey)">${esc(e.phone)||'\u2014'}</td>
-          <td><div class="enq-preview" title="${esc(e.message)}">${esc(preview)}${e.message.length>120?'\u2026':''}</div></td>
+          <td><div class="enq-co">${esc(e.company)||'&mdash;'}</div></td>
+          <td style="font-size:11px;color:var(--grey)">${esc(e.phone)||'&mdash;'}</td>
+          <td><div class="enq-preview" title="${esc(e.message)}">${esc(preview)}${e.message.length>120?'&hellip;':''}</div></td>
           <td style="text-align:center">
-            <button class="flag-btn ${e.bdFlagged?'flagged':''}" onclick="toggleBdFlag('${e.id}',${e.bdFlagged},event)" title="${e.bdFlagged?'Remove BD flag':'Flag as BD opportunity'}">\u2605</button>
+            <button class="flag-btn ${e.bdFlagged?'flagged':''}" onclick="toggleBdFlag('${e.id}',${e.bdFlagged},event)" title="${e.bdFlagged?'Remove BD flag':'Flag as BD opportunity'}">&#9733;</button>
           </td>
         </tr>
-        ${isOpen ? `<tr class="expanded">
-          <td colspan="6">
-            <div class="enq-expand">
-              <div style="white-space:pre-wrap;word-break:break-word;margin-bottom:10px">${esc(e.message)}</div>
-              <div class="enq-action-row">
-                <a href="mailto:${esc(e.email)}" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">\u2709 Reply</a>
-                ${e.phone?\`<a href="tel:${esc(e.phone)}" style="font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px" onclick="event.stopPropagation()">\u260e Call</a>\`:''}
-                <button class="flag-btn ${e.bdFlagged?'flagged':''}" onclick="toggleBdFlag('${e.id}',${e.bdFlagged},event)">${e.bdFlagged?'\u2605 BD flagged':'\u2606 Flag as BD'}</button>
-              </div>
-              <div class="enq-bd-section">
-                <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--grey);margin-bottom:5px">BD Notes</div>
-                <textarea class="bd-notes-input" id="bd-notes-${e.id}" rows="2" placeholder="Why is this interesting? What\u2019s the next step?" onclick="event.stopPropagation()">${esc(e.bdNotes)}</textarea>
-                <div style="margin-top:5px">
-                  <button style="font-size:11px;font-weight:700;padding:4px 12px;border:1px solid var(--border-strong);border-radius:20px;background:none;cursor:pointer;font-family:inherit" onclick="saveBdNotes('${e.id}',event)">Save note</button>
-                </div>
-              </div>
-            </div>
-          </td>
-        </tr>` : ''}
-      `;}).join('')}
+        ${isOpen ? '<tr class=\"expanded\"><td colspan=\"6\"><div class=\"enq-expand\"><div style=\"white-space:pre-wrap;word-break:break-word;margin-bottom:10px\">' + esc(e.message) + '</div><div class=\"enq-action-row\"><a href=\"mailto:' + esc(e.email) + '\" style=\"font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px\" onclick=\"event.stopPropagation()\">&#9993; Reply</a>' + (e.phone ? '<a href=\"tel:' + esc(e.phone) + '\" style=\"font-size:11px;font-weight:700;color:var(--black);text-decoration:none;padding:5px 12px;border:1px solid var(--border-strong);border-radius:20px\" onclick=\"event.stopPropagation()\">&#128222; Call</a>' : '') + '<button class=\"flag-btn ' + (e.bdFlagged?'flagged':'') + '\" onclick=\"toggleBdFlag(\'' + e.id + '\',' + e.bdFlagged + ',event)\">' + (e.bdFlagged?'&#9733; BD flagged':'&#9734; Flag as BD') + '</button></div><div class=\"enq-bd-section\"><div style=\"font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--grey);margin-bottom:5px\">BD Notes</div><textarea class=\"bd-notes-input\" id=\"bd-notes-' + e.id + '\" rows=\"2\" placeholder=\"Why is this interesting? What's the next step?\" onclick=\"event.stopPropagation()\">' + esc(e.bdNotes) + '</textarea><div style=\"margin-top:5px\"><button style=\"font-size:11px;font-weight:700;padding:4px 12px;border:1px solid var(--border-strong);border-radius:20px;background:none;cursor:pointer;font-family:inherit\" onclick=\"saveBdNotes(\'' + e.id + '\',event)\">Save note</button></div></div></div></td></tr>' : ''}
+      `
+}).join('')}
     </tbody>
   </table></div>`;
 }
@@ -1626,4 +1614,5 @@ loadAll();
 </script>
 </body>
 </html>
+
 
