@@ -598,6 +598,7 @@ function statusPill(s){
 // ── LOAD ──
 async function loadAll(){
   enqLoaded = false; // allow re-fetch on manual refresh
+  const btn=document.getElementById('btnRefresh');
   btn.disabled=true; btn.textContent='↻ Loading…';
   document.getElementById('pipelineList').innerHTML='<div class="loading"><div class="spinner"></div><br>Fetching jobs…</div>';
   document.getElementById('clientList').innerHTML='<div class="loading"><div class="spinner"></div><br>Fetching jobs…</div>';
